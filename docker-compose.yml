@@ -1,0 +1,15 @@
+# Optional: a ready MySQL without installing anything except Docker Desktop.
+#   docker compose up -d       then set DB_PASSWORD=root in .env and run:  python start.py
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: barangay_on
+    ports:
+      - "3306:3306"
+    volumes:
+      - barangay_mysql:/var/lib/mysql
+volumes:
+  barangay_mysql:

@@ -1,0 +1,310 @@
+{# Reusable page parts (the Jinja version of the PHP helper functions in includes/layout.php).
+   Element ids and data-* attributes are what assets/js/*.js look for - keep them unchanged. #}
+
+{% macro new_doc_button() -%}
+<div><button type="button" class="btn-primary" id="afNew" data-lookup="{{ url_for('api.resident_lookup') }}" data-tx="{{ url_for('api.transactions') }}" data-staff="{{ current_user().full_name }}" data-date="{{ today.strftime('%Y-%m-%d') }}">+ New document request</button></div>
+{%- endmacro %}
+
+{% macro signature_card() -%}
+        <section class="card wide sig-card" id="sigCard">
+          <div class="sig-head">
+            <div>
+              <h3>My E-Signature</h3>
+              <p class="muted">This signature is placed on a document automatically when you press <strong>Sign</strong>. You can change it any time. Documents you already signed keep the signature they were signed with.</p>
+            </div>
+            <span class="sig-badge" id="sigKind">Loading...</span>
+          </div>
+
+          <div class="sig-row">
+            <div class="sig-preview" aria-live="polite"><img id="sigImg" alt="Your current e-signature" hidden><span class="muted" id="sigLoading">Loading...</span></div>
+            <div class="sig-actions">
+              <button type="button" class="sig-btn primary" id="sigChange" aria-expanded="false" aria-controls="sigEditor">Change signature</button>
+              <button type="button" class="sig-btn link" id="sigAuto" hidden>Use the automatic signature</button>
+            </div>
+          </div>
+
+          <div class="sig-editor" id="sigEditor" hidden>
+            <div class="sig-tabs" role="tablist" aria-label="How do you want to make your signature?">
+              <button type="button" role="tab" class="sig-tab on" data-mode="draw" aria-selected="true">Draw</button>
+              <button type="button" role="tab" class="sig-tab" data-mode="type" aria-selected="false">Type</button>
+              <button type="button" role="tab" class="sig-tab" data-mode="upload" aria-selected="false">Upload picture</button>
+            </div>
+
+            <div class="sig-pane" data-pane="type" hidden>
+              <label class="sig-label" for="sigText">Type your name</label>
+              <input type="text" id="sigText" maxlength="40" autocomplete="off" placeholder="Your full name">
+              <div class="sig-styles" role="radiogroup" aria-label="Signature style">
+                <button type="button" class="sig-style on" role="radio" aria-checked="true" data-font="'Brush Script MT','Segoe Script','Snell Roundhand',cursive">Style 1</button>
+                <button type="button" class="sig-style" role="radio" aria-checked="false" data-font="'Snell Roundhand','Apple Chancery','Lucida Calligraphy','Segoe Script',cursive">Style 2</button>
+                <button type="button" class="sig-style" role="radio" aria-checked="false" data-font="'Segoe Print','Bradley Hand','Ink Free','Comic Sans MS',cursive">Style 3</button>
+              </div>
+            </div>
+            <div class="sig-pane" data-pane="upload" hidden>
+              <button type="button" class="sig-btn" id="sigUploadBtn">Choose a picture</button>
+              <input type="file" id="sigFile" accept="image/png,image/jpeg,image/webp" hidden>
+              <small class="muted">PNG, JPG or WEBP, 2 MB at most. A photo of your signature on white paper works; the white background is removed.</small>
+            </div>
+
+            <canvas id="sigPad" class="sig-pad" width="600" height="200" aria-label="Draw your signature here"></canvas>
+            <p class="sig-hint muted" id="sigHint">Draw your signature with your mouse, finger or stylus.</p>
+
+            <div class="sig-tools">
+              <button type="button" class="sig-btn" id="sigClear">Clear</button>
+              <span class="sig-spacer"></span>
+              <button type="button" class="sig-btn" id="sigCancel">Cancel</button>
+              <button type="button" class="sig-btn primary" id="sigSave">Save signature</button>
+            </div>
+          </div>
+        </section>
+{%- endmacro %}
+
+{% macro tx_table(mode, category='', status='', category_filter=False, bulk=False) -%}
+<div class="card" id="txApp" data-api="{{ url_for('api.transactions') }}" data-mode="{{ mode }}" data-category="{{ category }}" data-status="{{ status }}" data-bulk="{{ 1 if bulk else 0 }}" data-action="{{ url_for('api.captain_action') }}">
+<div class="toolbar"><input type="search" id="txSearch" placeholder="Search tracking no., resident or service..." value="{{ request.args.get('q', '')|trim }}">
+{% if category_filter %}<select id="txCategory"><option value="">All services</option><option value="document">Document Requests</option><option value="complaint">Complaints</option><option value="report">Community Reports</option></select>{% endif %}
+{% if category %}<select id="txService"><option value="">All services</option></select>{% endif %}
+<select id="txStatus"><option value="">All statuses</option></select><span class="count" id="txCount"></span>
+{% if bulk %}<button type="button" class="btn-ok push" id="txBulk" disabled>{{ 'Sign selected' if mode == 'sign' else 'Approve selected' }}</button>{% endif %}
+</div>
+<div class="table-wrap"><table><thead><tr>{% if bulk %}<th class="chk"><input type="checkbox" id="txAll" title="Select all pending"></th>{% endif %}<th>Tracking No.</th><th>Service</th><th>Resident</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+<tbody id="txBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div><div class="pager" id="txPager"></div></div>
+{%- endmacro %}
+
+{% macro history_table() -%}
+<div class="card" id="hisApp" data-api="{{ url_for('api.transaction_history') }}" data-detail="{{ url_for('api.transactions') }}">
+<div class="toolbar"><input type="search" id="hisSearch" placeholder="Search tracking no., resident or document..." value="{{ request.args.get('q', '')|trim }}"><span class="count" id="hisCount"></span></div>
+<div class="table-wrap"><table><thead><tr><th>Reference No.</th><th>Document</th><th>Requester</th><th>Type</th><th>Status</th><th>Date &amp; Time Released</th><th>Released by</th><th>Action</th></tr></thead>
+<tbody id="hisBody"><tr><td colspan="8">Loading...</td></tr></tbody></table></div><div class="pager" id="hisPager"></div></div>
+{%- endmacro %}
+
+{% macro users_app() -%}
+<div class="card" id="usrApp" data-api="{{ url_for('api.users') }}">
+<div class="toolbar"><input type="search" id="usrSearch" placeholder="Search name or username...">
+<select id="usrRole"><option value="">All roles</option><option value="admin">Administrator</option><option value="staff">Staff</option><option value="captain">Barangay Captain</option></select>
+<span class="count" id="usrCount"></span><button type="button" class="btn-primary push" id="usrAdd">+ Create Admin / Staff</button>
+<button type="button" class="btn-light" id="usrNewCaptain">+ New Captain</button></div>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Permissions</th><th>Action</th></tr></thead>
+<tbody id="usrBody"><tr><td colspan="5">Loading...</td></tr></tbody></table></div><div class="pager" id="usrPager"></div></div>
+{%- endmacro %}
+
+{% macro resident_accounts_app() -%}
+<div class="card" id="raApp" data-api="{{ url_for('api.resident_accounts') }}">
+<div class="toolbar"><input type="search" id="raSearch" placeholder="Search name or username..."><span class="count" id="raCount"></span></div>
+<div class="table-wrap"><table><thead><tr><th>Resident</th><th>Username</th><th>Password</th><th>Registered</th><th>Action</th></tr></thead>
+<tbody id="raBody"><tr><td colspan="5">Loading...</td></tr></tbody></table></div><div class="pager" id="raPager"></div></div>
+{%- endmacro %}
+
+{% macro residents_table(manage) -%}
+<div class="card" id="resApp" data-api="{{ url_for('api.residents') }}" data-manage="{{ 1 if manage else 0 }}" data-delete="{{ 1 if current_user().role == 'admin' else 0 }}">
+<div class="toolbar"><input type="search" id="resSearch" placeholder="Search name, address or contact...">
+<select id="resStatus"><option value="">All statuses</option><option>Registered</option><option>Pending</option><option>Inactive</option></select>
+<span class="count" id="resCount"></span>{% if manage and current_user().role == 'admin' %}<button type="button" class="btn-primary push" id="resAdd">+ Add Resident</button>{% endif %}
+</div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Address</th><th>Contact</th><th>Status</th><th>Online account</th><th>Registered</th><th>Action</th></tr></thead><tbody id="resBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>
+<div class="pager" id="resPager"></div></div>
+{%- endmacro %}
+
+{% macro notifications_app() -%}
+<div class="card" id="notifApp" data-api="{{ url_for('api.notifications') }}">
+<div class="toolbar"><select id="notifFilter"><option value="">All notifications</option><option value="1">Unread only</option></select>
+<span class="count" id="notifCount"></span><button type="button" class="btn-light push" id="notifReadAll">Mark all as read</button></div>
+<ul class="notif-list" id="notifList"><li class="muted">Loading...</li></ul><div class="pager" id="notifPager"></div></div>
+{%- endmacro %}
+
+{% macro reports_app() -%}
+<div class="card" id="repApp" data-api="{{ url_for('api.reports_summary') }}" data-export="{{ url_for('api.export_transactions') }}">
+<div class="toolbar"><label>From <input type="date" id="repFrom"></label><label>To <input type="date" id="repTo"></label>
+<button type="button" class="btn-primary" id="repApply">Apply</button>
+<a class="btn-light push" id="repExport" href="#">⬇ Export CSV</a></div></div>
+<div class="mini-stats" id="repStats"></div>
+<div class="two-grid"><div class="card"><h3>By Status</h3><div id="repStatus"></div></div>
+<div class="card"><h3>Most Requested Services</h3><div id="repServices"></div></div></div>
+<div class="card"><h3 id="repSeriesTitle">Transactions</h3><div class="vbars" id="repSeries"></div></div>
+{%- endmacro %}
+
+{% macro account_app() -%}
+<div class="two-grid" id="accApp" data-api="{{ url_for('api.account') }}">
+<form class="card form" id="profileForm"><h3>Account Information</h3>
+<label>Username<input type="text" id="accUsername" disabled></label>
+<div id="staffFields"><label>Full name<input type="text" name="full_name" maxlength="100"></label></div>
+<div id="residentFields" hidden>
+<p class="lead" id="residentLockNote">These details came from your registration. Only the Barangay staff or the administrator can change them. Please visit the barangay hall if something is wrong.</p>
+<div class="row2"><label>First name<input type="text" name="first_name" maxlength="60"></label>
+<label>Last name<input type="text" name="last_name" maxlength="60"></label></div>
+<label>Address<input type="text" name="address" maxlength="150"></label>
+<label>Contact number<input type="text" name="contact_no" inputmode="numeric" maxlength="11"></label></div>
+<button type="submit" class="btn-primary">Save changes</button></form>
+<form class="card form" id="passwordForm"><h3>Change Password</h3>
+<label>Current password<input type="password" name="current_password" required autocomplete="current-password"></label>
+<label>New password (at least 8 characters)<input type="password" name="new_password" minlength="8" required autocomplete="new-password"></label>
+<label>Confirm new password<input type="password" name="confirm_password" minlength="8" required autocomplete="new-password"></label>
+<button type="submit" class="btn-primary">Update password</button></form></div>
+{%- endmacro %}
+
+{% macro announcements_app(can_post) -%}
+<div class="two-grid" id="annApp" data-api="{{ url_for('api.announcements') }}" data-canpost="{{ 1 if can_post else 0 }}">
+{% if can_post %}<form class="card form" id="annForm"><h3>New Announcement</h3>
+<label>Title<input type="text" name="title" maxlength="150" required></label>
+<label>Message<textarea name="body" rows="6" required></textarea></label>
+<button type="submit" class="btn-primary">Post announcement</button></form>{% endif %}
+<div class="card"><h3>Posted Announcements</h3><ul class="ann-list" id="annList"><li class="muted">Loading...</li></ul></div></div>
+{%- endmacro %}
+
+{% macro resident_tx_app(category, type_label, detail_label, button) -%}
+{% if category == 'document' %}
+<div class="document-request" id="myApp" data-api="{{ url_for('api.my_transactions') }}" data-category="document">
+<form class="form document-form" id="newForm"><div class="document-heading"><div><span class="eyebrow">Barangay Document Services</span><h2 id="documentTitle">Request a Document</h2><p>Choose a document type and complete its required information.</p></div></div>
+<label class="document-type-label">Document type<select name="service_id" id="svc" required><option value="">Choose a document</option></select></label>
+<section id="dfFields" class="document-section" hidden><h3 id="dfSectionTitle">Personal Information</h3><div class="document-grid" id="dfDynamicFields"></div>
+<div class="form-actions"><button type="submit" class="btn-primary">Submit Request</button></div></section></form></div>
+<div class="card"><h3>My Requests</h3><div class="table-wrap"><table><thead><tr><th>Tracking No.</th><th>Service</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="myBody"><tr><td colspan="5">Loading...</td></tr></tbody></table></div></div>
+{% else %}
+<div class="card" id="myApp" data-api="{{ url_for('api.my_transactions') }}" data-category="{{ category }}">
+<form class="form" id="newForm"><h3>{{ button }}</h3>
+<label>{{ type_label }}<select name="service_id" id="svc" required><option value="">Choose...</option></select></label>
+<label id="otherWrap" hidden>Others (please specify)<input type="text" name="other_specify" id="otherText" maxlength="100" placeholder="Type the kind of {{ 'report' if category == 'report' else 'complaint' }}"></label>
+<label>{{ detail_label }}<textarea name="details" rows="4" maxlength="1000" required></textarea></label>
+<button type="submit" class="btn-primary">Submit</button></form></div>
+<div class="card"><h3>My Transactions</h3><div class="table-wrap"><table><thead><tr><th>Tracking No.</th><th>Service</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="myBody"><tr><td colspan="5">Loading...</td></tr></tbody></table></div></div>
+{% endif %}
+{%- endmacro %}
+
+{% macro seg(name, opts) -%}
+<div class="seg" role="radiogroup">{% for value, label in opts %}<label><input type="radio" name="{{ name }}" value="{{ value }}"><span>{{ label }}</span></label>{% endfor %}</div>
+{%- endmacro %}
+
+{% macro toggle(name, label, desc) -%}
+<div class="set-row"><div class="info"><strong>{{ label }}</strong><span>{{ desc }}</span></div>
+<label class="switch"><input type="checkbox" name="{{ name }}" aria-label="{{ label }}"><i></i></label></div>
+{%- endmacro %}
+
+{% macro actions(group) -%}
+<div class="set-actions"><button type="button" class="btn-primary" data-save>Save changes</button><button type="button" class="btn-light" data-cancel>Cancel</button><button type="button" class="btn-light push" data-reset="{{ group }}">Reset to default</button></div>
+{%- endmacro %}
+
+{% macro account_security_app() -%}
+{% macro pw(label, name, ph, auto, minlen=False) -%}
+<label>{{ label }}<span class="pw-wrap"><input type="password" name="{{ name }}" placeholder="{{ ph }}" required autocomplete="{{ auto }}"{% if minlen %} minlength="8"{% endif %}><button type="button" class="pw-eye" aria-label="Show password" title="Show / hide password">👁</button></span></label>
+{%- endmacro %}
+<div class="acc-grid" id="accApp" data-api="{{ url_for('api.account') }}">
+<form class="card form acc-card" id="profileForm"><h3><span class="h-ico">👤</span>Account Information</h3>
+<div class="acc-id"><div class="acc-photo"><div class="acc-avatar" id="accAvatar" aria-hidden="true">👤</div>
+<label class="acc-cam" title="Upload photo">📷<input type="file" id="accPhoto" accept="image/jpeg,image/png,image/gif,image/webp" hidden></label></div>
+<div class="acc-who"><strong id="accName">&nbsp;</strong><span id="accPosition"></span>
+<div class="acc-photo-actions"><button type="button" class="btn-light btn-xs" id="accPhotoBtn">Upload photo</button>
+<button type="button" class="btn-link" id="accPhotoRemove" hidden>Remove</button></div>
+<small>JPG, PNG, GIF or WEBP, up to 2 MB.</small></div></div>
+<div class="row2"><label>Username<input type="text" id="accUsername" disabled></label>
+<label>Role<input type="text" id="accRole" disabled></label></div>
+<div id="staffFields"><label>Full name<input type="text" name="full_name" maxlength="100"></label></div>
+<div id="residentFields" hidden>
+<div class="row2"><label>First name<input type="text" name="first_name" maxlength="60"></label>
+<label>Last name<input type="text" name="last_name" maxlength="60"></label></div>
+<label>Address<input type="text" name="address" maxlength="150"></label>
+<div class="row2"><label>Birthday<input type="date" name="birthdate"></label>
+<label>Sex<select name="sex"><option value="">Select</option><option>Male</option><option>Female</option></select></label></div>
+<div class="row2"><label>Civil status<select name="civil_status"><option value="">Select</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></label>
+<label>Contact number<input type="text" name="contact_no" inputmode="numeric" maxlength="11"></label></div></div>
+<div class="row2"><label>Status<input type="text" value="Active" disabled></label><span></span></div>
+<div id="profileSaveRow"><button type="submit" class="btn-primary">💾 Save changes</button></div></form>
+<form class="card form acc-card" id="passwordForm"><h3><span class="h-ico">🔒</span>Change Password</h3>
+<p class="lead">For your security, please use a strong password (at least 8 characters).</p>
+{{ pw('Current Password', 'current_password', 'Enter current password', 'current-password') }}
+{{ pw('New Password', 'new_password', 'Enter new password', 'new-password', True) }}
+{{ pw('Confirm New Password', 'confirm_password', 'Confirm new password', 'new-password', True) }}
+<button type="submit" class="btn-primary btn-block">🔒 Update Password</button></form>
+<div class="card acc-card" data-group="security"><h3><span class="h-ico">🛡️</span>Security Settings</h3>
+<div class="set-row"><div class="info"><strong>Session timeout</strong><span>Automatically log out after a period of inactivity.</span></div>
+<select name="session_timeout" aria-label="Session timeout">{% for v, l in [(0,'Never'),(15,'15 minutes'),(30,'30 minutes'),(60,'1 hour'),(120,'2 hours')] %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+<div class="set-note">Two-factor authentication and e-mail login alerts are not available yet, because the system has no e-mail service. Failed and successful logins are recorded under Recent Activity.</div>
+<div class="set-actions"><button type="button" class="btn-primary" data-save>Save</button><button type="button" class="btn-light" data-cancel>Cancel</button></div></div>
+{% if current_user().role == 'captain' %}
+<div class="card acc-card" id="sigCard"><h3><span class="h-ico">✍️</span>My Signature</h3>
+<p class="lead">This signature is placed on a document automatically when you press <strong>Sign</strong>. Draw it below or upload a picture of it. When your term ends, the next captain's own signature is used and documents you already signed keep yours.</p>
+<div class="sig-now"><span class="muted" id="sigKind">Current signature</span><div class="sig-preview"><img id="sigImg" alt="Your current signature"></div></div>
+<canvas id="sigPad" class="sig-pad" width="600" height="200" aria-label="Draw your signature here"></canvas>
+<div class="sig-tools"><button type="button" class="btn-light btn-xs" id="sigClear">Clear</button>
+<button type="button" class="btn-light btn-xs" id="sigUploadBtn">Upload picture</button>
+<input type="file" id="sigFile" accept="image/png,image/jpeg,image/webp" hidden>
+<button type="button" class="btn-primary btn-xs" id="sigSave">Save signature</button>
+<button type="button" class="btn-link" id="sigAuto">Use the automatic signature</button></div></div>
+{% endif %}
+<div class="card acc-card"><h3><span class="h-ico">🕘</span>Recent Activity</h3>
+<ul class="acc-activity" id="accActivity"><li class="muted">Loading...</li></ul></div>
+</div>
+{%- endmacro %}
+
+{% macro system_config_app() -%}
+{% set info = system_info() %}
+{% macro row(label, value, desc='') -%}
+<div class="set-row"><div class="info"><strong>{{ label }}</strong>{% if desc %}<span>{{ desc }}</span>{% endif %}</div><code class="cfg-val">{{ value }}</code></div>
+{%- endmacro %}
+<div class="card"><h2>System Configuration</h2>
+<p class="lead">How this installation is set up. These values come from <code>config.py</code> / environment variables on the server, so they are shown here for reference and cannot be edited from the browser.</p>
+{{ row('System', 'Barangay-On', 'Barangay Online Services Portal') }}
+{{ row('Framework', info.framework) }}
+{{ row('Database', info.database) }}
+{{ row('Python version', info.python) }}
+{{ row('Server time', info.time, 'Timezone: ' ~ info.tz) }}
+</div><div class="card"><h3>Accounts</h3>
+{{ row('Administrators', info.users.get('admin', 0)) }}
+{{ row('Staff', info.users.get('staff', 0)) }}
+{{ row('Barangay Captain', info.users.get('captain', 0)) }}
+{{ row('Residents', info.users.get('resident', 0)) }}
+<div class="set-note">Create accounts and choose what staff can do in <a href="{{ url_for('admin.users') }}">User &amp; Role Management</a>.</div></div>
+{%- endmacro %}
+
+{% macro activity_log_app() -%}
+<div class="card" id="actApp" data-api="{{ url_for('api.activity_log') }}">
+<div class="toolbar"><input type="search" id="actSearch" placeholder="Search user or action..."><span class="count" id="actCount"></span></div>
+<div class="table-wrap"><table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+<tbody id="actBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div><div class="pager" id="actPager"></div></div>
+{%- endmacro %}
+
+{% macro settings_app(role, section='general') -%}
+{% set is_resident = role == 'resident' %}
+<div class="settings single{% if section == 'account' %} wide{% endif %}" id="setApp" data-api="{{ url_for('api.settings') }}" data-section="{{ section }}"><div>
+{% if section == 'appearance' %}
+<section class="set-panel" data-panel="appearance" data-group="appearance"><div class="card"><h2>Appearance</h2>
+<p class="lead">Changes show right away. Press Save changes to keep them the next time you log in.</p>
+<div class="set-row"><div class="info"><strong>Theme</strong><span>Light mode, dark mode, or follow your device.</span></div>{{ seg('theme', [('light','Light'),('dark','Dark'),('auto','Device')]) }}</div>
+<div class="set-row"><div class="info"><strong>Font size</strong><span>Makes text and controls smaller or larger.</span></div>{{ seg('font_size', [('small','Small'),('medium','Medium'),('large','Large')]) }}</div>
+<div class="set-row"><div class="info"><strong>Layout density</strong><span>Compact fits more on the screen.</span></div>{{ seg('density', [('comfortable','Comfortable'),('compact','Compact')]) }}</div>
+{{ toggle('sidebar_collapsed', 'Start with the sidebar collapsed', 'Shows only the icons. You can always expand it with the menu button at the top left.') }}
+{{ actions('appearance') }}</div></section>
+{% elif section == 'account' %}
+<section class="set-panel" data-panel="account">{{ account_security_app() }}</section>
+{% elif section == 'notifications' %}
+<section class="set-panel" data-panel="notifications" data-group="notifications"><div class="card"><h2>Notification preferences</h2>
+<p class="lead">Choose which optional notifications appear in your list below.</p>
+{{ toggle('notify_announcements', 'Announcements', 'Tell me when the barangay posts a new announcement.') }}
+{% if is_resident %}{{ toggle('notify_requests', 'Request status updates', 'Tell me when my document, complaint or report changes status.') }}{% endif %}
+<div class="set-note"><strong>Critical alerts are separate.</strong> Emergency and other critical alerts are always delivered and cannot be switched off here.</div>
+<div class="set-note">E-mail and SMS notifications are not available yet, so they are not listed.</div>
+{{ actions('notifications') }}</div></section>
+<section class="set-panel" data-panel="inbox"><h2 class="set-sub">Your notifications</h2>{{ notifications_app() }}</section>
+{% elif section == 'privacy' %}
+<section class="set-panel" data-panel="privacy"><div class="card set-help"><h2>Privacy &amp; data use</h2>
+<p>Barangay-On keeps only the information needed to run barangay services: your account name, your resident record (name, address, contact number) and the requests you file.</p>
+<ul><li>Only authorized barangay staff can see resident records.</li><li>Your password is stored in a protected (hashed) form and is never shown to anyone.</li><li>Your display preferences in Settings are private to your account.</li></ul>
+<p>To correct your records or ask for your account to be removed, please contact the barangay office or the system administrator.</p></div>
+<div class="card set-help"><h2>Help &amp; support</h2>
+<p>Need help using the portal? Visit or call the barangay hall during office hours, or ask the system administrator. The hotlines and office hours are listed on the home page.</p>
+<p><strong>Accessibility:</strong> every control can be used with the keyboard (Tab, Enter, Space, Esc). Use Appearance to switch to dark mode or a larger font size.</p></div></section>
+{% elif section == 'system' %}
+{% if current_user().role == 'admin' %}<section class="set-panel" data-panel="system">{{ system_config_app() }}</section>{% endif %}
+{% elif section == 'activity' %}
+{% if current_user().role == 'admin' %}<section class="set-panel" data-panel="activity">{{ activity_log_app() }}</section>{% endif %}
+{% else %}
+<section class="set-panel" data-panel="general" data-group="general"><div class="card"><h2>General preferences</h2>
+<p class="lead">How dates, times and tables are shown to you, and where you start.</p>
+<div class="set-row"><div class="info"><strong>Language</strong><span>English is the only language available right now.</span></div><select disabled aria-label="Language"><option>English</option></select></div>
+<div class="set-row"><div class="info"><strong>Date format</strong><span>Used in tables, lists and the clock.</span></div>
+<select name="date_format" aria-label="Date format"><option value="mdy">Oct 22, 2026</option><option value="dmy">22 Oct 2026</option><option value="iso">2026-10-22</option></select></div>
+<div class="set-row"><div class="info"><strong>Time format</strong><span>12-hour or 24-hour clock.</span></div>{{ seg('time_format', [('12h','12-hour'),('24h','24-hour')]) }}</div>
+<div class="set-row"><div class="info"><strong>Default dashboard page</strong><span>The page you land on when you log in.</span></div><select name="default_page" aria-label="Default page"></select></div>
+<div class="set-row"><div class="info"><strong>Rows per page</strong><span>For tables such as requests and residents.</span></div>
+<select name="page_size" aria-label="Rows per page"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></div>
+{{ actions('general') }}</div></section>
+{% endif %}
+</div></div>
+{%- endmacro %}
