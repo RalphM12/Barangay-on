@@ -65,8 +65,8 @@
           </div>
           <div class="row-2">
             <div>
-              <label for="sex">Sex</label>
-              <select id="sex" name="sex" required{{ bad('sex') }}>
+              <label for="gender">Gender</label>
+              <select id="gender" name="sex" required{{ bad('sex') }}>
                 <option value="">Select</option>
                 {% for opt in sex_options %}<option value="{{ opt }}"{% if old.sex == opt %} selected{% endif %}>{{ opt }}</option>{% endfor %}
               </select>

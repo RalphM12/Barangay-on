@@ -7,9 +7,9 @@
       {{ menu_button() }}
       <form class="search" action="transactions" method="get"><input type="search" id="search" name="q" placeholder="Search transaction number, resident name, or service..."></form>
       <div class="clock" id="clock"></div>
-      <a class="bell" href="notifications" title="Notifications">🔔<b class="pill" data-unread hidden>0</b></a>
+      <a class="bell" href="notifications" title="Notifications">{{ ui_icon('🔔', 20) }}<b class="pill" data-unread hidden>0</b></a>
       <a class="profile" href="{{ profile_url(user) }}" title="View my profile">
-        <div class="avatar">👤</div>
+        <div class="avatar">{{ ui_icon('👤', 20) }}</div>
         <div>
           <strong id="userName">{{ user.full_name }}</strong>
           <small id="userRole">{{ user.position }}</small>
@@ -29,20 +29,20 @@
           </div>
 
           <div class="stat-row">
-            <a class="stat" href="documents"><span class="ico blue">📄</span><h4>Document Requests</h4><strong id="stDocs">–</strong><small>Pending / For Action</small></a>
-            <a class="stat" href="complaints"><span class="ico orange">📢</span><h4>Complaints</h4><strong id="stComp">–</strong><small>Pending / For Action</small></a>
-            <a class="stat" href="community_reports"><span class="ico green">⚠️</span><h4>Community Reports</h4><strong id="stRep">–</strong><small>Pending / For Action</small></a>
-            <a class="stat" href="residents"><span class="ico purple">👥</span><h4>Total Residents</h4><strong id="stRes">–</strong><small>Registered</small></a>
-            <a class="stat" href="transactions"><span class="ico teal">📅</span><h4>Today's Transactions</h4><strong id="stToday">–</strong><small>Processed</small></a>
+            <a class="stat" href="documents"><span class="ico blue">{{ ui_icon('📄', 20) }}</span><h4>Document Requests</h4><strong id="stDocs">–</strong><small>Pending / For Action</small></a>
+            <a class="stat" href="complaints"><span class="ico orange">{{ ui_icon('📢', 20) }}</span><h4>Complaints</h4><strong id="stComp">–</strong><small>Pending / For Action</small></a>
+            <a class="stat" href="community_reports"><span class="ico green">{{ ui_icon('⚠', 20) }}</span><h4>Community Reports</h4><strong id="stRep">–</strong><small>Pending / For Action</small></a>
+            <a class="stat" href="residents"><span class="ico purple">{{ ui_icon('👥', 20) }}</span><h4>Total Residents</h4><strong id="stRes">–</strong><small>Registered</small></a>
+            <a class="stat" href="transactions"><span class="ico teal">{{ ui_icon('📅', 20) }}</span><h4>Today's Transactions</h4><strong id="stToday">–</strong><small>Processed</small></a>
           </div>
 
           <div class="card quick-card">
             <h3>Quick Actions</h3>
             <div class="quick">
-              <a href="documents" class="q blue">📄 <span>Process Document Requests</span></a>
-              <a href="complaints" class="q orange">📢 <span>Manage Complaints</span></a>
-              <a href="community_reports" class="q green">⚠️ <span>Review Community Reports</span></a>
-              <a href="transactions" class="q purple">🧾 <span>View All Transactions</span></a>
+              <a href="documents" class="q blue">{{ ui_icon('📄', 20) }} <span>Process Document Requests</span></a>
+              <a href="complaints" class="q orange">{{ ui_icon('📢', 20) }} <span>Manage Complaints</span></a>
+              <a href="community_reports" class="q green">{{ ui_icon('⚠', 20) }} <span>Review Community Reports</span></a>
+              <a href="transactions" class="q purple">{{ ui_icon('🧾', 20) }} <span>View All Transactions</span></a>
             </div>
           </div>
 
@@ -58,9 +58,9 @@
             <div class="card">
               <h3>Service Request Breakdown</h3>
               <ul class="breakdown">
-                <li><span class="ico blue sm">📄</span> Document Requests <strong id="bkDocs">0</strong></li>
-                <li><span class="ico orange sm">📢</span> Complaints <strong id="bkComp">0</strong></li>
-                <li><span class="ico green sm">⚠️</span> Community Reports <strong id="bkRep">0</strong></li>
+                <li><span class="ico blue sm">{{ ui_icon('📄', 16) }}</span> Document Requests <strong id="bkDocs">0</strong></li>
+                <li><span class="ico orange sm">{{ ui_icon('📢', 16) }}</span> Complaints <strong id="bkComp">0</strong></li>
+                <li><span class="ico green sm">{{ ui_icon('⚠', 16) }}</span> Community Reports <strong id="bkRep">0</strong></li>
               </ul>
               <div id="lineChart" class="line-chart"></div>
             </div>

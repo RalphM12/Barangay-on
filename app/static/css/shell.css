@@ -513,3 +513,34 @@ a.profile { color: inherit; text-decoration: none; cursor: pointer; border-radiu
 a.profile:hover { background: rgba(120, 140, 190, .16); }
 a.profile:active { transform: scale(.98); }
 a.profile:focus-visible { outline: 2px solid var(--accent, #4f7cff); outline-offset: 2px; }
+
+/* ---- Simple line icons on dashboards (same style as the sidebar) ---- */
+html[data-scheme] body .ico { background: var(--surface-2, #eef2fb); color: var(--blue, #2f7de9); box-shadow: none; overflow: visible; }
+html[data-scheme] body .ico:after { display: none; }
+html[data-scheme] body .stat:hover .ico, html[data-scheme] body .q:hover .ico, html[data-scheme] body .svc:hover .ico { transform: none; }
+html[data-scheme] body .ico .ui-ic, .q .ui-ic, .bell .ui-ic, .avatar .ui-ic, .section-title .ui-ic, .svc i .ui-ic { opacity: 1; }
+html[data-scheme] body .ico.blue   { background: #e3edfc; color: #2f7de9; }
+html[data-scheme] body .ico.orange { background: #fff0e0; color: #e2761b; }
+html[data-scheme] body .ico.green  { background: #def5e7; color: #1f9d55; }
+html[data-scheme] body .ico.purple { background: #ece4fb; color: #7a3fd0; }
+html[data-scheme] body .ico.teal   { background: #d9f3f6; color: #1c8fa3; }
+html[data-scheme="dark"] body .ico.blue   { background: #1e3558; color: #7db3ff; }
+html[data-scheme="dark"] body .ico.orange { background: #4a3218; color: #ffb066; }
+html[data-scheme="dark"] body .ico.green  { background: #1b4030; color: #6fdc9b; }
+html[data-scheme="dark"] body .ico.purple { background: #36275a; color: #c5a3ff; }
+html[data-scheme="dark"] body .ico.teal   { background: #17414a; color: #6fd6e6; }
+/* resident cards keep their solid colour tile with a white line icon */
+html[data-scheme] body .stat.pending .ico, html[data-scheme] body .stat.processing .ico, html[data-scheme] body .stat.completed .ico,
+html[data-scheme] body .svc .ico { color: #fff; }
+html[data-scheme] body .stat.pending .ico { background: #f5a623; }
+html[data-scheme] body .stat.processing .ico { background: var(--blue, #2f7de9); }
+html[data-scheme] body .stat.completed .ico { background: #22a559; }
+html[data-scheme] body .svc.doc .ico { background: #2f7de9; }
+html[data-scheme] body .svc.comp .ico { background: #ee5a36; }
+html[data-scheme] body .svc.rep .ico { background: #7a3fd0; }
+/* quick-action tiles, bell, avatar, section titles, arrows */
+.q { color: inherit; } .q .ui-ic { flex: 0 0 auto; }
+.bell, .avatar { color: inherit; } .avatar { color: #fff; }
+.bell { display: inline-flex; align-items: center; justify-content: center; }
+.section-title { display: flex; align-items: center; gap: 8px; }
+.svc i { display: inline-flex; font-style: normal; }

@@ -11,9 +11,9 @@
         <small id="today"></small>
       </div>
       <div class="right">
-        <a class="bell" href="notifications" title="Notifications">🔔<b class="pill" data-unread hidden>0</b></a>
+        <a class="bell" href="notifications" title="Notifications">{{ ui_icon('🔔', 20) }}<b class="pill" data-unread hidden>0</b></a>
         <a class="profile" href="{{ profile_url(user) }}" title="View my profile">
-          <div class="avatar">👤</div>
+          <div class="avatar">{{ ui_icon('👤', 20) }}</div>
           <div>
             <strong id="userName">{{ user.full_name }}</strong>
             <small id="userRole">{{ user.position }}</small>

@@ -70,10 +70,13 @@ def index():
         db.session.rollback()
     import os
     gallery_dir = os.path.join(current_app.static_folder, "img", "gallery")
+    # file name in static/img/gallery -> caption. Replace the placeholder text with the real description anytime.
+    lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore."
+    captions = {"1.jpg": lorem, "2.jpg": lorem, "3.jpg": lorem, "4.jpg": "Clean Drive", "5.jpg": "Feeding Program"}
     gallery = []
     if os.path.isdir(gallery_dir):
-        gallery = [url_for("static", filename=f"img/gallery/{f}") for f in sorted(os.listdir(gallery_dir))
-                   if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))]
+        gallery = [{"src": url_for("static", filename=f"img/gallery/{f}"), "caption": captions.get(f, "")}
+                   for f in sorted(os.listdir(gallery_dir)) if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))]
     cfg = current_app.config
     palettes = [
         ["#7a1f5c", "#2f6fb0", "#c18a2b", "#6a4a9c", "#8a8f96", "#3f7f4f", "#b53b45"],
@@ -177,7 +180,7 @@ def register():
         if bd is None:
             errors["birthdate"] = "Enter a valid birthday."
         if old["sex"] not in SEX_OPTIONS:
-            errors["sex"] = "Choose Male or Female."
+            errors["sex"] = "Please select your gender."
         if old["civil_status"] not in CIVIL_OPTIONS:
             errors["civil_status"] = "Choose your civil status."
         if not re.fullmatch(r"[0-9]{7,11}", old["contact_no"]):

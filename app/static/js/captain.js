@@ -32,7 +32,7 @@
         '<td>' + esc(r.tracking_no) + '</td><td>' + esc(r.service) + '</td><td>' + esc(r.resident) + '</td>' +
         '<td>' + fmtDate(r.created_at) + '</td>' +
         '<td><button class="act approve" data-id="' + Number(r.id) + '">Sign</button></td></tr>';
-    }).join('') || '<tr><td colspan="6" class="muted">Nothing is waiting for your signature. 🎉</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="muted">Nothing is waiting for your signature.</td></tr>';
     updateBulk();
   }
 

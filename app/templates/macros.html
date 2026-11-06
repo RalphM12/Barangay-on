@@ -30,7 +30,7 @@
 {%- endmacro %}
 
 {% macro bell() -%}
-<a class="bell" href="{{ notifications_url() }}" title="Notifications">🔔<b class="pill" data-unread hidden>0</b></a>
+<a class="bell" href="{{ notifications_url() }}" title="Notifications">{{ ui_icon('🔔', 20) }}<b class="pill" data-unread hidden>0</b></a>
 {%- endmacro %}
 
 {% macro menu_button() -%}
@@ -38,7 +38,7 @@
 {%- endmacro %}
 
 {% macro profile_chip(user, with_position=True) -%}
-<a class="profile" href="{{ profile_url(user) }}" title="View my profile"><div class="avatar">👤</div>
+<a class="profile" href="{{ profile_url(user) }}" title="View my profile"><div class="avatar">{{ ui_icon('👤', 20) }}</div>
 {%- if with_position %}<div><strong id="userName">{{ user.full_name }}</strong><small id="userRole">{{ user.position }}</small></div>
 {%- else %}<strong id="userName">{{ user.full_name }}</strong>{% endif %}</a>
 {%- endmacro %}

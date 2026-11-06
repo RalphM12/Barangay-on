@@ -104,7 +104,19 @@
         <h2>Gallery</h2>
         {% if gallery %}
           <div class="gallery">
-            {% for src in gallery %}<img src="{{ src }}" alt="Barangay photo" loading="lazy">{% endfor %}
+            {% for g in gallery %}
+              <figure class="gallery-item" data-ar-card>
+                <div class="ar-frame">
+                  <img src="{{ g.src }}" alt="{{ g.caption[:60] if g.caption else 'Barangay photo' }}" loading="lazy">
+                  <span class="ar-hud" aria-hidden="true"><i></i><i></i><i></i><i></i><b class="ar-scan"></b></span>
+                  <span class="ar-glare" aria-hidden="true"></span>
+                  <button type="button" class="ar-open" data-ar-open data-src="{{ g.src }}" data-caption="{{ g.caption }}" aria-label="View {{ g.caption[:40] if g.caption else 'photo' }} in AR">
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 12v10"/></svg> View in AR
+                  </button>
+                </div>
+                {% if g.caption %}<figcaption>{{ g.caption }}</figcaption>{% endif %}
+              </figure>
+            {% endfor %}
           </div>
         {% else %}
           <p class="section-sub">Photos from barangay activities will appear here.</p>
@@ -113,4 +125,4 @@
     </section>
   </main>
 {% endblock %}
-{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script><script src="{{ static_v('js/gallery-ar.js') }}"></script>{% endblock %}

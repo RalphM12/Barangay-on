@@ -98,9 +98,9 @@
   // Profile photo in the top bar (url comes from <html data-avatar>; Account & Security updates it live)
   function setAvatar(url) {
     document.querySelectorAll('.topbar .avatar').forEach(function (el) {
-      if (!el.dataset.fallback) el.dataset.fallback = el.textContent;
+      if (!el.dataset.fallback) el.dataset.fallback = el.innerHTML;
       if (url) { el.textContent = ''; var img = document.createElement('img'); img.alt = ''; img.src = url; el.appendChild(img); el.classList.add('has-img'); }
-      else { el.textContent = el.dataset.fallback; el.classList.remove('has-img'); }
+      else { el.innerHTML = el.dataset.fallback; el.classList.remove('has-img'); }
     });
   }
   setAvatar(root.dataset.avatar || '');
