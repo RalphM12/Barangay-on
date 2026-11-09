@@ -17,13 +17,13 @@
   <main>
     <section class="hero" id="home" aria-label="Welcome">
       <div class="slides">
-        {% for m in murals %}
-          <div class="slide{% if loop.first %} on{% endif %}">{{ m }}<div class="photo" style="background-image:url('{{ url_for('static', filename='img/hero/%d.jpg' % loop.index) }}')"></div></div>
+        {% for n in range(1, hero_count + 1) %}
+          <div class="slide{% if loop.first %} on{% endif %}"><div class="photo" style="background-image:url('{{ url_for('static', filename='img/hero/%d.jpg' % n) }}')"></div></div>
         {% endfor %}
       </div>
       <div class="hero-shade"></div>
       <div class="hero-body">
-        <span class="hero-emblem">{{ brand_mark(2, 1.3, 3.2, 3.2, 2.6) }}</span>
+        <img class="hero-logo" src="{{ url_for('static', filename='img/brand/logo-dark.png') }}" alt="Barangay-On: Online Barangay Services" width="420" height="90">
         <p class="hero-kicker">Barangay Management System</p>
         <h1>{{ barangay }}</h1>
         <p class="hero-sub">Online Resident Portal</p>
@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="dots" role="tablist" aria-label="Slides">
-        {% for m in murals %}<button type="button" class="dot{% if loop.first %} on{% endif %}" aria-label="Show slide {{ loop.index }}"></button>{% endfor %}
+        {% for n in range(1, hero_count + 1) %}<button type="button" class="dot{% if loop.first %} on{% endif %}" aria-label="Show slide {{ n }}"></button>{% endfor %}
       </div>
     </section>
 

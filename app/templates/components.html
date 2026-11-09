@@ -97,7 +97,7 @@
 {% macro residents_table(manage) -%}
 <div class="card" id="resApp" data-api="{{ url_for('api.residents') }}" data-manage="{{ 1 if manage else 0 }}" data-delete="{{ 1 if current_user().role == 'admin' else 0 }}">
 <div class="toolbar"><input type="search" id="resSearch" placeholder="Search name, address or contact...">
-<select id="resStatus"><option value="">All statuses</option><option>Registered</option><option>Pending</option><option>Inactive</option></select>
+<select id="resStatus"><option value="">All statuses</option><option>Registered</option><option value="Pending">Waiting for Verification</option><option>Inactive</option></select>
 <span class="count" id="resCount"></span>{% if manage and current_user().role == 'admin' %}<button type="button" class="btn-primary push" id="resAdd">+ Add Resident</button>{% endif %}
 </div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Address</th><th>Contact</th><th>Status</th><th>Online account</th><th>Registered</th><th>Action</th></tr></thead><tbody id="resBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>
 <div class="pager" id="resPager"></div></div>

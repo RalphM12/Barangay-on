@@ -6,12 +6,33 @@
   var rows = [];
   var meta = {};   // resident profile + today's date (documents form)
 
+  // A resident who is not Registered yet cannot file anything: show why and lock the form (the server blocks it too)
+  function applyVerification(status) {
+    var form = $('#newForm'), box = $('#verifyBanner');
+    if (!form) return;
+    var blocked = status && status !== 'Registered';
+    if (blocked && !box) {
+      box = document.createElement('div');
+      box.id = 'verifyBanner'; box.className = 'verify-banner'; box.setAttribute('role', 'status');
+      form.parentNode.insertBefore(box, form);
+    }
+    if (box) {
+      box.hidden = !blocked;
+      box.innerHTML = status === 'Pending'
+        ? '<b>Waiting for Verification.</b> The barangay office has not registered you yet. You can request documents, file complaints and send community reports once you are registered.'
+        : '<b>Your resident record is not active.</b> Please contact the barangay office.';
+    }
+    if (blocked) form.setAttribute('inert', ''); else form.removeAttribute('inert');
+    form.classList.toggle('is-locked', !!blocked);
+  }
+
   async function load() {
     try {
       var d = await getJson(api + '?' + qs({ category: category }));
       if (!d) return;
       rows = d.rows;
       meta = d;
+      applyVerification(d.profile && d.profile.status);
       window.docServices = d.services;
 
       var sel = $('#svc');

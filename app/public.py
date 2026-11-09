@@ -84,7 +84,7 @@ def index():
         ["#b53b45", "#6a4a9c", "#2f6fb0", "#8a8f96", "#c18a2b", "#7a1f5c", "#3f7f4f"],
     ]
     return render_template(
-        "index.html", murals=[mural(p) for p in palettes], services=services, announcements=_latest_announcements(), gallery=gallery,
+        "index.html", hero_count=2, services=services, announcements=_latest_announcements(), gallery=gallery,
         barangay=cfg["BARANGAY"], about=cfg["ABOUT"], hotlines=cfg["HOTLINES"], office_hours=cfg["OFFICE_HOURS"], email=cfg["EMAIL"],
     )
 
@@ -200,10 +200,10 @@ def register():
                 db.session.add(u)
                 db.session.flush()
                 db.session.add(Resident(user_id=u.id, first_name=old["first_name"], last_name=old["last_name"], address=old["address"],
-                                        birthdate=bd, sex=old["sex"], civil_status=old["civil_status"], contact_no=old["contact_no"], status="Registered"))
+                                        birthdate=bd, sex=old["sex"], civil_status=old["civil_status"], contact_no=old["contact_no"], status="Pending"))
                 db.session.commit()
-                notify_staff("New resident registration", f"{full_name} registered online and is now on the Residents list as Registered.", "info")
-                add_notification(u.id, "Welcome to Barangay-On", "Your registration is complete. You are now a registered resident and can request documents online.", "success")
+                notify_staff("New resident registration", f"{full_name} registered online and is Waiting for Verification. Open Residents and click Verify This Resident to approve.", "info")
+                add_notification(u.id, "Welcome to Barangay-On", "Your registration is Waiting for Verification. You can request documents, file complaints and send community reports once the barangay office registers you.", "info")
                 db.session.commit()
                 return redirect(url_for("public.login", registered=1, u=old["username"]))
             except IntegrityError:

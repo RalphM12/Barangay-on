@@ -34,6 +34,7 @@ bp = Blueprint("api", __name__, url_prefix="/api")
 CATEGORIES = ["document", "complaint", "report"]
 STATUS_ORDER = ["Pending", "Approved", "Released", "Under Review", "Resolved", "Rejected"]
 RES_STATUSES = ["Registered", "Pending", "Inactive"]
+PENDING_LABEL = "Waiting for Verification"   # shown to people instead of the stored value "Pending"
 OTHER_SERVICE = "Others"
 
 
@@ -144,7 +145,8 @@ def admin_dashboard():
 @bp.get("/resident_dashboard")
 def resident_dashboard():
     user = require_role("resident", True)
-    rid = db.session.scalar(select(Resident.id).where(Resident.user_id == user["id"]).limit(1)) or 0
+    me = db.session.execute(select(Resident.id, Resident.status).where(Resident.user_id == user["id"]).limit(1)).first()
+    rid = me.id if me else 0
     t = Transaction
 
     def count(statuses):
@@ -155,7 +157,7 @@ def resident_dashboard():
         .join(Service, Service.id == t.service_id).where(t.resident_id == rid, t.status != "Inactive")
         .order_by(t.created_at.desc(), t.id.desc()).limit(5)))
     return jsonify({
-        "user": {"name": user["full_name"]},
+        "user": {"name": user["full_name"]}, "resident_status": me.status if me else "",
         "stats": {"pending": count(["Pending"]), "processing": count(["Under Review"]), "completed": count(["Released", "Resolved"])},
         "recent": recent, "unread": unread_count(int(user["id"])),
     })
@@ -411,7 +413,8 @@ def _create_document(user):
         if not r:
             raise ApiError("Please search for and select a registered resident, or type the name of a non-registered person.", 422)
         if r.status != "Registered":
-            raise ApiError(f"This resident is {r.status}, not Registered. Update the resident record first.", 422)
+            shown = PENDING_LABEL if r.status == "Pending" else r.status
+            raise ApiError(f"This resident is {shown}, not Registered yet. Register the resident on the Residents page first.", 422)
         if (r.address or "").strip() == "":
             raise ApiError("This resident has no address on record. Add it on the Residents page first - it is not filled in for you.", 422)
         res = {"id": r.id, "user_id": r.user_id, "first_name": r.first_name, "last_name": r.last_name, "address": r.address}
@@ -474,6 +477,11 @@ def my_transactions():
         f = request.form
         if f.get("action", "") != "create":
             raise ApiError("Unknown action", 400)
+        if resident.status == "Pending":
+            raise ApiError("Your registration is Waiting for Verification. You can request documents, file complaints and "
+                           "send community reports once the barangay office has registered you.", 403)
+        if resident.status != "Registered":
+            raise ApiError("Your resident record is not active. Please contact the barangay office.", 403)
         service = None
         if category == "document":
             service_id = f.get("service_id", 0, type=int) or 0
@@ -862,6 +870,13 @@ def residents():
             row.birthdate, row.civil_status = birth, civil or None
             if status:
                 row.status = status        # the form no longer sends it: an existing status is kept as it is
+            register_now = f.get("register", "") == "1"
+            if register_now:
+                if user["role"] not in ("admin", "staff"):
+                    raise ApiError("Only the administrator or barangay staff can verify a resident.", 403)
+                if row.status != "Pending":
+                    raise ApiError("Only a resident who is Waiting for Verification can be verified.", 422)
+                row.status = "Registered"
             row.sex = sex or None
             acc = db.session.execute(select(User).where(User.id == row.user_id, User.role == "resident")).scalar() if row.user_id else None
 
@@ -897,6 +912,11 @@ def residents():
                                  "The administrator set a new password for your account. Please change it in Settings > Account & Security.", "info")
             if acc:  # keep the login name in sync
                 acc.full_name = f"{first} {last}"
+            if register_now:
+                log_activity("Resident verified", f"Verified and registered resident {reg_no(row.id)} {first} {last}", commit=False)
+                if acc:
+                    add_notification(acc.id, "You are now registered",
+                                     "The barangay office verified your registration. You can now request documents, file complaints and send community reports.", "success")
             db.session.commit()
         else:
             login_name, login_pass = (f.get("username") or "").strip(), f.get("new_password", "")
