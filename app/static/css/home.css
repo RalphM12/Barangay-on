@@ -57,7 +57,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-
 .band { padding: 64px clamp(16px, 3vw, 56px); }
 .band-white { background: #fff; }
 /* each menu section fills the screen so a click lands cleanly on it */
-#about, #officials, #services, #hotlines, #gallery { min-height: calc(100vh - var(--bar-h)); display: flex; align-items: center; }
+#about, #services, #hotlines, #gallery { min-height: calc(100vh - var(--bar-h)); display: flex; align-items: center; }
+/* About + Officials sit together on one screen: no full-height gap between them */
+#about { min-height: 0; padding-bottom: 28px; }
+#officials { padding-top: 28px; }
 #about .wrap, #officials .wrap, #services .wrap, #hotlines .wrap, #gallery .wrap { width: 100%; }
 .wrap { max-width: 1040px; margin: 0 auto; }
 .band h2 { font-size: 24px; font-weight: 800; letter-spacing: -.4px; }
