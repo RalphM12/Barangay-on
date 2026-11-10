@@ -124,7 +124,7 @@ body.gp ::selection { background: color-mix(in srgb, var(--blue) 30%, transparen
 body.gp a:focus-visible, body.gp button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 10px; }
 
 /* ---------------------------------------------------------------- the glass material */
-body.gp :where(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .footer, .topbar) {
+body.gp :where(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .footer, .topbar) {
   background: var(--g-bg);
   border: 1px solid var(--g-line);
   box-shadow: var(--shadow), inset 0 1px 0 var(--rim-hi);
@@ -132,21 +132,21 @@ body.gp :where(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .footer, 
   --mx: 50%; --my: 0%; --glow: 0;
 }
 /* pointer-following specular light (set by glass-public.js) */
-body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::before {
+body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
   background: radial-gradient(440px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .34), transparent 46%);
   opacity: var(--glow, 0); transition: opacity .5s ease; mix-blend-mode: soft-light;
 }
 /* liquid rim */
-body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::after {
+body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
   background: linear-gradient(140deg, var(--rim-hi), var(--rim-lo) 28%, transparent 55%, var(--rim-lo) 82%, var(--rim-hi));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
   opacity: .85;
 }
-body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list) > * { position: relative; z-index: 1; }
-body.gp :where(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .footer) { position: relative; }
+body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list) > * { position: relative; z-index: 1; }
+body.gp :where(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .footer) { position: relative; }
 
 /* ---------------------------------------------------------------- top bar: floating capsule + sliding lens */
 body.gp .topbar {
@@ -378,6 +378,8 @@ body.gp-home .facts { border-left: 1px solid var(--g-line); padding: 26px 28px; 
 body.gp-home .facts dt { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--muted); }
 body.gp-home .facts dd { font-size: 15.5px; font-weight: 600; }
 body.gp-home .svc-grid { gap: 20px; }
+body.gp-home .off-grid { gap: 20px; }
+body.gp-home .off { padding: 26px 16px 20px; border-radius: 28px; }
 body.gp-home .svc { border-top: 1px solid var(--g-line); padding: 26px 26px 18px; border-radius: 28px; transition: transform .6s var(--ease), box-shadow .5s var(--ease), background .35s ease; }
 body.gp-home .svc:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift), inset 0 1px 0 var(--rim-hi); background: var(--g-bg-strong); }
 body.gp-home .svc h3 { font-size: 17px; font-weight: 700; letter-spacing: -.025em; }

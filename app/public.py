@@ -3,11 +3,11 @@ import re
 from datetime import date, datetime, timedelta
 
 from flask import Blueprint, current_app, redirect, render_template, request, send_from_directory, session, url_for
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 
 from .core import (
-    add_notification, avatar_dir, db_error_hint, csrf_token, current_user, hash_password, home_for, log_activity, notify_staff,
+    add_notification, avatar_dir, avatar_url, db_error_hint, csrf_token, current_user, hash_password, home_for, log_activity, notify_staff,
     verify_password, ROLE_HOME,
 )
 from .models import Announcement, Resident, Service, User, db, now
@@ -57,6 +57,24 @@ def _latest_announcements(n=3):
         return []
 
 
+def _officials():
+    """Captain, admins and staff for the home page (name, position, photo only; never usernames or contact data)."""
+    order = {"captain": 0, "admin": 1, "staff": 2}
+    try:
+        rows = db.session.execute(
+            select(User).where(User.role.in_(order), or_(User.term_ended_at.is_(None), User.term_ended_at > now()))
+            .order_by(User.full_name)
+        ).scalars().all()
+    except Exception:
+        db.session.rollback()
+        return []
+    rows.sort(key=lambda u: order[u.role])
+    labels = {"captain": "Barangay Captain", "admin": "Administrator", "staff": "Barangay Staff"}
+    return [{"name": u.full_name, "position": u.position or labels[u.role], "role": u.role,
+             "photo": avatar_url(u.id),
+             "initials": "".join(w[0] for w in u.full_name.split()[:2]).upper()} for u in rows]
+
+
 @bp.get("/")
 def index():
     user = current_user()
@@ -84,7 +102,7 @@ def index():
         ["#b53b45", "#6a4a9c", "#2f6fb0", "#8a8f96", "#c18a2b", "#7a1f5c", "#3f7f4f"],
     ]
     return render_template(
-        "index.html", hero_count=2, services=services, announcements=_latest_announcements(), gallery=gallery,
+        "index.html", hero_count=2, services=services, announcements=_latest_announcements(), gallery=gallery, officials=_officials(),
         barangay=cfg["BARANGAY"], about=cfg["ABOUT"], hotlines=cfg["HOTLINES"], office_hours=cfg["OFFICE_HOURS"], email=cfg["EMAIL"],
     )
 

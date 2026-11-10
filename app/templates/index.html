@@ -7,6 +7,7 @@
 {% block nav %}
       <a href="#home" class="active">Home</a>
       <a href="#about">About Barangay</a>
+      {% if officials %}<a href="#officials">Officials</a>{% endif %}
       <a href="#services">Services</a>
       <a href="#hotlines">Hotlines</a>
       <a href="#gallery">Gallery</a>
@@ -52,7 +53,26 @@
       </div>
     </section>
 
-    <section class="band band-white" id="services">
+    {% if officials %}
+    <section class="band band-white" id="officials">
+      <div class="wrap">
+        <h2>Barangay officials</h2>
+        <p class="section-sub">The people serving our community.</p>
+        <div class="off-grid">
+          {% for o in officials %}
+            <article class="off off-{{ o.role }}">
+              {% if o.photo %}<img class="off-photo" src="{{ o.photo }}" alt="{{ o.name }}" loading="lazy">
+              {% else %}<span class="off-photo off-initials" aria-hidden="true">{{ o.initials }}</span>{% endif %}
+              <h3>{{ o.name }}</h3>
+              <p>{{ o.position }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="band{% if not officials %} band-white{% endif %}" id="services">
       <div class="wrap">
         <h2>Services you can use online</h2>
         <p class="section-sub">Log in to send a request and follow its status.</p>
