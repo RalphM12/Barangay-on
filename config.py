@@ -59,7 +59,7 @@ class Config:
     JSON_SORT_KEYS = False
 
     # ---- Edit these to match your barangay (home page) ----
-    BARANGAY = "Barangay Sample, Sample City, Philippines"
+    BARANGAY = "Sto. Niño, Baliuag City, Bulacan"
     ABOUT = (
         "Barangay-On is the online portal of our barangay. Residents can request certificates and "
         "permits, file complaints and community reports, and follow every request from their own "
