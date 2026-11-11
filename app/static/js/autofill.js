@@ -1,8 +1,8 @@
 // Staff autofill: "New document request" on the Document Requests page.
-// Staff searches a registered resident -> the details are read from the database (api/resident_lookup.php)
+// Staff searches a registered resident -> the details are read from the database (/api/resident_lookup)
 // and filled in. Nothing is invented: a field that is empty in the record stays empty and is flagged.
 // A person who is NOT a registered resident can also be typed in: nothing is autofilled for them, staff types every detail.
-// Staff reviews everything, types the purpose, and confirms before anything is saved (api/transactions.php create_document).
+// Staff reviews everything, types the purpose, and confirms before anything is saved (/api/transactions create_document).
 (function () {
   var btn = $('#afNew');
   if (!btn) return;

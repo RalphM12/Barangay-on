@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """One command to get Barangay-On running with MySQL:
 
-    python start.py            check MySQL -> create database + tables -> load demo data (first time only) -> start the site
-    python start.py --sqlite   skip MySQL and use a local SQLite file (testing only)
-    python start.py --reset    ERASE everything and reload the demo data
-    python start.py --port 5050
+    python main.py --demo      check MySQL -> create database + tables -> load DEMO data and demo logins (your own computer only)
+    python main.py             same, but NO demo data: set ADMIN_USERNAME / ADMIN_PASSWORD to create the first administrator
+    python main.py --sqlite    skip MySQL and use a local SQLite file (testing only, includes demo data)
+    python main.py --reset     ERASE everything and reload the demo data
+    python main.py --port 5050
 
 Edit the DB_* lines in the .env file next to this script if your MySQL user / password / port differ.
 """
@@ -15,8 +16,12 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--sqlite", action="store_true", help="use SQLite instead of MySQL")
 parser.add_argument("--reset", action="store_true", help="erase all data and reload the demo data")
+parser.add_argument("--demo", action="store_true", help="load demo data and allow the demo logins (local testing only)")
 parser.add_argument("--port", type=int, default=5000)
 args = parser.parse_args()
+
+if args.demo or args.sqlite or args.reset:
+    os.environ["ALLOW_DEMO_LOGINS"] = "1"  # demo accounts can only log in when you asked for demo mode
 
 if args.sqlite:
     for k in ("DATABASE_URL", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"):
@@ -77,9 +82,12 @@ with app.app_context():
         added = upgrade_schema()  # also upgrades tables left by the older PHP version
         if added:
             print("  database upgraded, added columns: " + ", ".join(added))
-        if args.reset or not db.session.scalar(select(User.id).limit(1)):
+        empty = not db.session.scalar(select(User.id).limit(1))
+        if args.reset or (empty and app.config["ALLOW_DEMO_LOGINS"]):
             load_sample_data()
-            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password")
+            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password   (LOCAL TESTING ONLY)")
+        elif empty:
+            print("  database is empty and no demo data was loaded. Set ADMIN_USERNAME and ADMIN_PASSWORD to create the first administrator.")
         else:
             print("  tables OK, existing data kept")
     except Exception as exc:

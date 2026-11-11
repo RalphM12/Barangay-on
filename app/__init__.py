@@ -8,7 +8,7 @@ from markupsafe import Markup, escape
 from config import Config
 
 from .core import ApiError, avatar_url, csrf_token, current_user, get_user_settings, log_activity
-from .models import db
+from .models import APP_TZ, db, now as local_now
 
 
 class JSONProvider(DefaultJSONProvider):
@@ -60,6 +60,12 @@ def create_app(config_object=Config):
             return jsonify({"error": "Something went wrong. Please try again."}), 500
         raise err
 
+    # Behind a reverse proxy (Wasmer, nginx) the visitor's real address and https come from the X-Forwarded-* headers
+    proxies = int(app.config.get("TRUSTED_PROXIES", 0))
+    if proxies > 0:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies)
+
     # ---------------------------------------------------------------- per request
     @app.before_request
     def _session_timeout():
@@ -81,6 +87,10 @@ def create_app(config_object=Config):
     def _headers(resp):
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+        if request.is_secure:  # tell browsers to use https only (set once the site is served over https)
+            resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         if request.path.startswith("/api/") or session.get("user"):
             resp.headers["Cache-Control"] = "no-store"
         return resp
@@ -117,7 +127,7 @@ def create_app(config_object=Config):
             db.session.rollback()
             users, dbinfo = {}, "Not reachable"
         return {"framework": f"Flask {flask_version}", "database": dbinfo, "python": platform.python_version(),
-                "time": datetime.now().strftime("%b %d, %Y %I:%M %p"), "tz": time.tzname[0], "users": users}
+                "time": local_now().strftime("%b %d, %Y %I:%M %p"), "tz": getattr(APP_TZ, "key", None) or str(APP_TZ), "users": users}
 
     from .nav import notifications_url, profile_url, ui_icon, settings_sections, nav_items
     app.jinja_env.globals.update(
@@ -143,6 +153,9 @@ def create_app(config_object=Config):
             added = upgrade_schema()
             if added:
                 print(" * Database upgraded, added: " + ", ".join(added))
+            if not app.config.get("ALLOW_DEMO_LOGINS"):
+                from .seed import bootstrap_from_env
+                bootstrap_from_env()
         except Exception as exc:  # database down etc.: the pages show a readable message instead
             app.logger.warning("Schema check skipped: %s", str(exc).splitlines()[0][:160])
 

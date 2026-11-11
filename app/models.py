@@ -1,5 +1,6 @@
 """Database models (SQLAlchemy). Works on SQLite (dev/testing) and MySQL (deployment)."""
-from datetime import datetime
+import os
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.dialects import mysql
 from flask_sqlalchemy import SQLAlchemy
@@ -10,9 +11,25 @@ db = SQLAlchemy()
 LongText = db.Text().with_variant(mysql.MEDIUMTEXT(), "mysql")
 
 
+def _load_tz():
+    """Barangay local time (Philippines by default). Set APP_TIMEZONE to change it.
+
+    Hosts such as Wasmer run in UTC, so the server clock must not be used directly.
+    """
+    name = os.environ.get("APP_TIMEZONE", "Asia/Manila")
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name)
+    except Exception:  # no tz database on this host: Philippines has no daylight saving, UTC+8
+        return timezone(timedelta(hours=8)) if name == "Asia/Manila" else timezone.utc
+
+
+APP_TZ = _load_tz()
+
+
 def now() -> datetime:
-    """Local server time without microseconds (same idea as MySQL NOW())."""
-    return datetime.now().replace(microsecond=0)
+    """Current barangay time (naive, no microseconds) for storing in the database."""
+    return datetime.now(APP_TZ).replace(microsecond=0, tzinfo=None)
 
 
 class User(db.Model):
@@ -99,7 +116,7 @@ class UserSetting(db.Model):
     page_size = db.Column(db.Integer, nullable=False, default=10)
     notify_announcements = db.Column(db.Integer, nullable=False, default=1)
     notify_requests = db.Column(db.Integer, nullable=False, default=1)
-    session_timeout = db.Column(db.Integer, nullable=False, default=0)
+    session_timeout = db.Column(db.Integer, nullable=False, default=30)
     updated_at = db.Column(db.DateTime, nullable=False, default=now, onupdate=now)
 
 
@@ -132,3 +149,13 @@ class Announcement(db.Model):
     title = db.Column(db.String(150), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=now)
+
+
+class LoginAttempt(db.Model):
+    """Failed logins / registrations, used to slow down password guessing. Old rows are deleted automatically."""
+    __tablename__ = "login_attempts"
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(10), nullable=False)       # login | register
+    key = db.Column(db.String(120), nullable=False)       # "u:<username>" or "ip:<address>"
+    created_at = db.Column(db.DateTime, nullable=False, default=now)
+    __table_args__ = (db.Index("ix_attempt_lookup", "kind", "key", "created_at"),)

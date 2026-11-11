@@ -1,0 +1,3 @@
+DELETE these files from your project:
+.DS_Store
+app.zip

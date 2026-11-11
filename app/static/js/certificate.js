@@ -7,7 +7,7 @@
   var CONFIG = {
     province: 'Bulacan',
     municipality: 'Baliuag',
-    barangay: 'Barangay Sample',        // shown as BARANGAY SAMPLE on the header
+    barangay: 'Barangay Sto Niño',     // shown as BARANGAY STO NIÑO on the header
     // Sample signature of the Punong Barangay. It is placed on the document AUTOMATICALLY once the Captain presses
     // "Sign" (the request then has a signed_at date). To use the real signature, replace this value with the URL
     // or data URI of a transparent PNG / SVG of the Captain's signature.
@@ -307,7 +307,7 @@
 
   window.certificateHtml = certificateHtml;   // used for previews/tests
 
-  // id = transaction id, api = /api/transactions.php
+  // id = transaction id, api = //api/transactions
   window.openCertificate = async function (id, api, onPrinted) {
     try {
       var d = await getJson(api + '?id=' + encodeURIComponent(id));
