@@ -9,7 +9,7 @@ import re
 import secrets
 from datetime import date, datetime, timedelta
 
-from flask import Blueprint, Response, jsonify, request, session
+from flask import Blueprint, Response, current_app, jsonify, request, session
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -1281,7 +1281,7 @@ def certificate_pdf(tx_id):
     w, h = A4
     c.setFont("Helvetica", 10)
     c.drawCentredString(w / 2, h - 60, "Republic of the Philippines")
-    c.drawCentredString(w / 2, h - 74, "Barangay Sample, Sample City")
+    c.drawCentredString(w / 2, h - 74, current_app.config["BARANGAY"])
     c.setFont("Helvetica-Bold", 20)
     c.drawCentredString(w / 2, h - 130, t.service.name.upper())
     c.setFont("Helvetica", 12)
