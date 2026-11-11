@@ -67,7 +67,7 @@ class Config:
     )
     HOTLINES = [
         ("National Emergency Hotline", "911"),
-        ("Barangay Hall", "0917 000 0000"),
+        ("Barangay Hall", "953 406 7811"),
         ("Barangay Peace and Order", "0917 000 0001"),
         ("Health Center", "0917 000 0002"),
         ("Fire Station", "0917 000 0003"),
