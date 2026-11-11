@@ -71,14 +71,22 @@
   }
 
   function documentSnapshot(details, service) {
-    var pairs = [];
+    var pairs = [], has = {};
     String(details || '').split(/\r?\n/).forEach(function (line) {
-      var i=line.indexOf(':'); if (i > -1) pairs.push([line.slice(0,i).trim(),line.slice(i+1).trim()]);
+      var i=line.indexOf(':'); if (i > 0) { var k=line.slice(0,i).trim(); pairs.push([k,line.slice(i+1).trim()]); has[k.toLowerCase()] = true; }
     });
+    // Older or staff-entered requests were saved as plain text (no "Label: value" lines): still show them.
+    var p = meta.profile || {};
+    if (!pairs.length && String(details || '').trim()) pairs.push(['Purpose of Request', String(details).trim()]);
+    var lead = [];
+    if (!has['full name'] && !has["owner's name"] && p.name) lead.push(['Full Name', p.name]);
+    if (!has['complete address'] && !has['business address'] && p.address) lead.push(['Complete Address', p.address]);
+    if (!has['contact number'] && p.contact_no) pairs.push(['Contact Number', p.contact_no]);
+    pairs = lead.concat(pairs).filter(function (f) { return !/^document type$/i.test(f[0]); });
     return '<div class="document-snapshot"><div class="document-heading"><div><span class="eyebrow">REQUEST DOCUMENTS</span><h2>' + esc(service || 'Barangay Document') + '</h2><p>Resident-submitted information</p></div></div>' +
-      '<section class="document-section"><h3>Request Information</h3><div class="document-grid">' + pairs.map(function (f) {
+      '<section class="document-section"><h3>Request Information</h3>' + (pairs.length ? '<div class="document-grid">' + pairs.map(function (f) {
         return '<div class="snapshot-field' + (/address|purpose|business name|nature of business|remarks/i.test(f[0]) ? ' wide' : '') + '"><span>' + esc(f[0]) + '</span><div>' + esc(f[1] || '—') + '</div></div>';
-      }).join('') + '</div></section></div>';
+      }).join('') + '</div>' : '<p class="muted">No details were recorded for this request.</p>') + '</section></div>';
   }
 
   // Complaints / Reports: choosing "Others" shows a textbox to specify the type
