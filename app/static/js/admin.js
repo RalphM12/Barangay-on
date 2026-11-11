@@ -1,4 +1,4 @@
-// Admin dashboard: loads everything from api/admin_dashboard.php
+// Admin dashboard: loads everything from /api/admin_dashboard
 (function () {
   var STATUS_COLORS = {
     'Pending': '#f59e0b', 'Submitted': '#3b82f6', 'Under Review': '#60a5fa', 'Processing': '#fbbf24',

@@ -12,24 +12,34 @@ Python 3 + Flask · HTML5/CSS3/JavaScript + Bootstrap · MySQL (SQLite for testi
        source venv/bin/activate          # Windows: venv\Scripts\activate
        pip install -r requirements.txt
 3. **Start everything:**
-       python start.py
+       python main.py --demo
    It checks MySQL, creates the `barangay_on` database and tables, loads demo data the first time, and starts the site at http://localhost:5000
 
-Demo logins: `admin`, `staff`, `captain`, `resident` (password: `password`).
+Demo logins (local testing only, `--demo` mode): `admin`, `staff`, `captain`, `resident` (password: `password`). They are switched off everywhere else.
 
-No MySQL yet? `python start.py --sqlite` runs a local test copy (data is NOT in MySQL).
-`python start.py --reset` erases everything and reloads the demo data. `python start.py --port 5050` changes the port.
+No MySQL yet? `python main.py --sqlite` runs a local test copy (data is NOT in MySQL).
+`python main.py --reset` erases everything and reloads the demo data. `python main.py --port 5050` changes the port.
 
 ## Already have a database from the old PHP version?
-Just run `python start.py`. It automatically adds the columns the Flask version needs (for example `users.signature`) and keeps all your data. Nothing is deleted.
+Just run `python main.py`. It automatically adds the columns the Flask version needs (for example `users.signature`) and keeps all your data. Nothing is deleted.
 
 ## Settings
-Edit `.env` (same folder as `start.py`; hidden on Mac: Cmd+Shift+. in Finder): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`. Passwords with special characters work as-is.
-`database/barangay_on_mysql.sql` can also be imported in phpMyAdmin instead.
+Edit `.env` (same folder as `main.py`; hidden on Mac: Cmd+Shift+. in Finder): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`. Passwords with special characters work as-is.
+`database/barangay-on.sql` can also be imported in phpMyAdmin instead.
 
 ## Extra commands
 `flask --app wsgi db-info` (which database + row counts) · `flask --app wsgi create-admin` · `flask --app wsgi init-db`.
 
 ## Layout
 app/api.py (JSON API) · app/pages.py · app/public.py · app/workflow.py (approve > sign > release) · app/core.py · app/templates · app/static.
-Production: `gunicorn wsgi:app` with a real SECRET_KEY.
+
+## Going live (security checklist)
+Set these as environment variables / secrets on the host (never commit them):
+* `APP_ENV=production`: the app refuses to start without a real `SECRET_KEY`, cookies become https-only.
+* `SECRET_KEY`: 32+ random characters: `python3 -c "import secrets; print(secrets.token_hex(32))"`.
+* `ADMIN_USERNAME`, `ADMIN_PASSWORD` (10+ characters), optional `ADMIN_NAME`: creates the first administrator when it does not exist yet. Remove `ADMIN_PASSWORD` afterwards.
+* `DATABASE_URL` or `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME`: a MySQL user with a strong password.
+* `APP_TIMEZONE` (default `Asia/Manila`).
+
+Demo accounts (password `password`) can never log in outside `python main.py --demo`. Start the site with `gunicorn wsgi:app` (not `python wsgi.py`, which is the development server).
+Run the tests with `pip install pytest` then `pytest`.

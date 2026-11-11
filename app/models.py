@@ -116,7 +116,7 @@ class UserSetting(db.Model):
     page_size = db.Column(db.Integer, nullable=False, default=10)
     notify_announcements = db.Column(db.Integer, nullable=False, default=1)
     notify_requests = db.Column(db.Integer, nullable=False, default=1)
-    session_timeout = db.Column(db.Integer, nullable=False, default=0)
+    session_timeout = db.Column(db.Integer, nullable=False, default=30)
     updated_at = db.Column(db.DateTime, nullable=False, default=now, onupdate=now)
 
 
@@ -149,3 +149,13 @@ class Announcement(db.Model):
     title = db.Column(db.String(150), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=now)
+
+
+class LoginAttempt(db.Model):
+    """Failed logins / registrations, used to slow down password guessing. Old rows are deleted automatically."""
+    __tablename__ = "login_attempts"
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(10), nullable=False)       # login | register
+    key = db.Column(db.String(120), nullable=False)       # "u:<username>" or "ip:<address>"
+    created_at = db.Column(db.DateTime, nullable=False, default=now)
+    __table_args__ = (db.Index("ix_attempt_lookup", "kind", "key", "created_at"),)

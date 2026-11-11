@@ -307,7 +307,7 @@
 
   window.certificateHtml = certificateHtml;   // used for previews/tests
 
-  // id = transaction id, api = /api/transactions.php
+  // id = transaction id, api = //api/transactions
   window.openCertificate = async function (id, api, onPrinted) {
     try {
       var d = await getJson(api + '?id=' + encodeURIComponent(id));

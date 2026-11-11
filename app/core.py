@@ -1,6 +1,6 @@
 """Session, role checks, CSRF, permissions, notifications and other helpers shared by every page and API.
 
-This is the Flask counterpart of the PHP ``includes/auth.php``.
+This is authentication, permissions and shared helpers.
 """
 import base64
 import hmac
@@ -38,6 +38,31 @@ class ApiError(Exception):
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8")[:72], bcrypt.gensalt(rounds=10)).decode("ascii")
+
+
+# bcrypt of the word "password": what the demo accounts use. Never accepted unless demo logins are switched on.
+DEMO_PASSWORD_HASH = "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
+
+_COMMON_PASSWORDS = {
+    "password", "password1", "password12", "password123", "passw0rd", "p@ssw0rd", "qwertyuiop", "qwerty123",
+    "1234567890", "123456789", "12345678910", "0123456789", "abcdefghij", "iloveyou12", "welcome123",
+    "admin12345", "admin123456", "barangay123", "barangayon", "barangay-on", "letmein123", "changeme123",
+}
+
+
+def password_problem(password: str, username: str = "") -> str:
+    """Return a message when the password is too weak, or '' when it is fine."""
+    p = password or ""
+    if len(p) < 10:
+        return "Password must be at least 10 characters."
+    if len(p.encode("utf-8")) > 72:
+        return "Password is too long (72 characters maximum)."
+    low = p.lower()
+    if low in _COMMON_PASSWORDS or len(set(low)) < 4 or p.isdigit():
+        return "That password is too easy to guess. Use a longer, less common one (a few unrelated words works well)."
+    if username and len(username) >= 4 and username.lower() in low:
+        return "The password must not contain the username."
+    return ""
 
 
 def verify_password(password: str, password_hash: str) -> bool:
@@ -184,9 +209,15 @@ def csrf_token() -> str:
     return session["csrf"]
 
 
+def csrf_valid(sent: str) -> bool:
+    """True only when a token was issued for this session AND the same one was sent back."""
+    mine = session.get("csrf", "") or ""
+    return bool(mine) and bool(sent) and hmac.compare_digest(mine, sent)
+
+
 def csrf_check() -> None:
     sent = request.form.get("csrf", "")
-    if not hmac.compare_digest(session.get("csrf", "") or "", sent):
+    if not csrf_valid(sent):
         raise ApiError("Invalid security token. Please refresh the page.", 419)
 
 
@@ -246,7 +277,7 @@ SETTING_DEFAULTS = {
     "page_size": 10,
     "notify_announcements": 1,
     "notify_requests": 1,
-    "session_timeout": 0,
+    "session_timeout": 30,
 }
 SETTING_CHOICES = {
     "theme": ["light", "dark", "auto"],
@@ -475,3 +506,37 @@ def db_error_hint(exc: Exception) -> str:
     if "doesn't exist" in text or "no such table" in text.lower() or "1146" in text:
         return "The database tables do not exist yet. Run: python start.py"
     return "Database error: " + text.splitlines()[0][:140]
+
+
+# --------------------------------------------------------------------------------------
+#  Slowing down password guessing
+# --------------------------------------------------------------------------------------
+
+
+def client_ip() -> str:
+    return (request.remote_addr or "unknown")[:60]
+
+
+def attempts_in_window(kind: str, key: str, minutes: int) -> int:
+    from sqlalchemy import func
+    from .models import LoginAttempt
+    since = now() - timedelta(minutes=minutes)
+    return int(db.session.scalar(select(func.count()).select_from(LoginAttempt).where(
+        LoginAttempt.kind == kind, LoginAttempt.key == key, LoginAttempt.created_at >= since)) or 0)
+
+
+def record_attempt(kind: str, *keys: str) -> None:
+    """Remember a failed attempt (and tidy up rows older than a day)."""
+    from sqlalchemy import delete
+    from .models import LoginAttempt
+    for k in keys:
+        db.session.add(LoginAttempt(kind=kind, key=k[:120]))
+    db.session.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now() - timedelta(days=1)))
+    db.session.commit()
+
+
+def clear_attempts(kind: str, key: str) -> None:
+    from sqlalchemy import delete
+    from .models import LoginAttempt
+    db.session.execute(delete(LoginAttempt).where(LoginAttempt.kind == kind, LoginAttempt.key == key))
+    db.session.commit()
