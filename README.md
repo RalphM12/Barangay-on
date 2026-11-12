@@ -43,3 +43,14 @@ Set these as environment variables / secrets on the host (never commit them):
 
 Demo accounts (password `password`) can never log in outside `python main.py --demo`. Start the site with `gunicorn wsgi:app` (not `python wsgi.py`, which is the development server).
 Run the tests with `pip install pytest` then `pytest`.
+
+## Deploying on Wasmer (step by step)
+1. Create the app from this GitHub repo, preset `python`, leave Build/Install commands empty, **Enable Database** on.
+2. In *Environment Variables* add ONLY these four (delete any `DB_*` or `DATABASE_URL` you added yourself, Wasmer supplies the database settings):
+   * `APP_ENV` = `production`
+   * `SECRET_KEY` = 64 random characters
+   * `ADMIN_USERNAME` = `admin`  (or your choice)
+   * `ADMIN_PASSWORD` = a strong password, 10+ characters (remove it after the first successful start)
+3. Deploy. In *Logs* you should see `connected to MySQL, database is ready` and `Listening on 0.0.0.0:...`.
+4. Log in with the admin account, then add staff and the captain from the admin pages.
+Uploaded profile photos are stored on the app's disk, which Wasmer may reset on redeploy; re-upload them if they disappear.

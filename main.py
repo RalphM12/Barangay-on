@@ -7,6 +7,7 @@
     python main.py --reset     ERASE everything and reload the demo data
     python main.py --port 5050
 
+On a host, set APP_ENV=production, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD (see README, 'Going live').
 Edit the DB_* lines in the .env file next to this script if your MySQL user / password / port differ.
 """
 import argparse
@@ -18,7 +19,8 @@ parser.add_argument("--sqlite", action="store_true", help="use SQLite instead of
 parser.add_argument("--reset", action="store_true", help="erase all data and reload the demo data")
 parser.add_argument("--demo", action="store_true", help="load demo data and allow the demo logins (local testing only)")
 parser.add_argument("--port", type=int, default=5000)
-args = parser.parse_args()
+# `python main.py` reads the options above. When a host imports this file as a module (main:app) there are none.
+args = parser.parse_args() if __name__ == "__main__" else parser.parse_args([])
 
 if args.demo or args.sqlite or args.reset:
     os.environ["ALLOW_DEMO_LOGINS"] = "1"  # demo accounts can only log in when you asked for demo mode
@@ -102,5 +104,10 @@ with app.app_context():
     except Exception as exc:
         explain(exc)
 
-print(f"\n  Open  http://localhost:{args.port}   (Ctrl+C to stop)\n")
-app.run(port=args.port, debug=False)
+if __name__ == "__main__":
+    # On a host (Wasmer...) listen on every address and on the port it gives us; on your computer stay on localhost.
+    hosted = bool(os.environ.get("PORT")) or app.config["APP_ENV"] == "production"
+    host = "0.0.0.0" if hosted else "127.0.0.1"
+    port = int(os.environ.get("PORT") or args.port)
+    print(f"\n  Open  http://localhost:{port}   (Ctrl+C to stop)\n" if not hosted else f"\n  Listening on {host}:{port}\n")
+    app.run(host=host, port=port, debug=False)
