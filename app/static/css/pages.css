@@ -944,3 +944,12 @@ html body .modal-back .modal:has(.view-split) { max-width: min(1400px, 97vw); }
 @media print {
   #printRoot .cert.cert2 { width: 210mm; height: 297mm; aspect-ratio: auto; }
 }
+/* blanks you can type in (print dialog only; nothing of this shows on paper) */
+@media screen {
+  .cert-edit .f2v[contenteditable] { cursor: text; transition: background .15s; }
+  .cert-edit .f2v[contenteditable]:hover { background: #fff8d6; }
+  .cert-edit .f2v[contenteditable]:focus { background: #fff2b3; outline: 2px solid #e0b800; outline-offset: 1px; }
+  .cert-edit .f2chk { cursor: pointer; border-radius: 3px; }
+  .cert-edit .f2chk:hover { background: #fff8d6; }
+}
+.cert2 .f2v { white-space: pre-wrap; min-height: 1.25em; }

@@ -248,11 +248,13 @@
     ['Legal Services', /legal|lawyer|court/i], ['Scholarship at Tulong sa Edukasyon', /scholar|tulong|educ|school/i], ['Death Burial', /burial|death|funeral/i]
   ];
 
+  function box(on) { return '<span class="f2chk">(' + (on ? '&#10003;' : '&nbsp;&nbsp;') + ')</span>'; }
+
   function indigency(c) {
     var p = String(c.purpose || ''), hit = -1;
     INDIGENCY_PURPOSES.forEach(function (o, i) { if (hit < 0 && o[1].test(p)) hit = i; });
-    var rows = INDIGENCY_PURPOSES.map(function (o, i) { return '<div>(' + (i === hit ? '&#10003;' : '&nbsp;&nbsp;') + ') ' + o[0] + '</div>'; }).join('') +
-      '<div>(' + (hit < 0 && p ? '&#10003;' : '&nbsp;&nbsp;') + ') Others (specify): <span class="f2v f2w">' + (hit < 0 && p ? esc(p) : '&nbsp;') + '</span></div>';
+    var rows = INDIGENCY_PURPOSES.map(function (o, i) { return '<div>' + box(i === hit) + ' ' + o[0] + '</div>'; }).join('') +
+      '<div>' + box(hit < 0 && p) + ' Others (specify): <span class="f2v f2w">' + (hit < 0 && p ? esc(p) : '&nbsp;') + '</span></div>';
     return head2() + '<h2 class="f2title">CERTIFICATE OF INDIGENCY</h2>' +
       '<div class="f2body"><p>TO WHOM IT MAY CONCERN:</p>' +
       '<p>This is to certify that the person whose name and details appear hereon is a <b>bona fide resident</b> of this barangay and belongs to an <b>INDIGENT FAMILY</b> and <b>low-income</b> families/resident of this Barangay.</p>' +
@@ -323,7 +325,7 @@
     return String(s || '').toLowerCase().replace(/(^|[\s.\-'])([a-zñ])/g, function (m, a, b) { return a + b.toUpperCase(); });
   }
 
-  function certificateHtml(t) {
+  function certificateHtml(t, editable) {
     var c = collect(t), body, own = true;
     switch (t.service) {
       case 'Certificate of Residency': body = residency(c); break;
@@ -331,7 +333,11 @@
       case 'Business Permit': case 'Business Permit Request': body = businessPermit(c); own = false; break;
       default: body = clearance(c);       // Barangay Clearance and any other document
     }
-    if (own) return '<div class="cert cert2" id="certSheet">' + body + '</div>';
+    if (own) {
+      // editable: staff can click any blank line to type or correct it before printing
+      if (editable) body = body.replace(/class="f2v/g, 'contenteditable="true" spellcheck="false" class="f2v').replace(/class="f2chk"/g, 'class="f2chk" role="checkbox" tabindex="0"');
+      return '<div class="cert cert2' + (editable ? ' cert-edit' : '') + '" id="certSheet">' + body + '</div>';
+    }
     return '<div class="cert" id="certSheet"><div class="cframe">' + (CONFIG.demo ? '<div class="cwm" aria-hidden="true">SAMPLE - DEMO ONLY</div>' : '') + body + '</div></div>';
   }
 
@@ -368,12 +374,22 @@
       if (t.category !== 'document') return showToast('Only document requests can be printed.', true);
       if (onPrinted && !t.signed_at) return showToast('The Barangay Captain must sign this document before it can be printed.', true);
       var body = openModal('Print ' + t.service,
-        '<div class="cert-note">Request <b>' + esc(t.tracking_no) + '</b> &middot; ' + (onPrinted ? 'signed by the Captain. Printing this document releases it automatically.' : 'the form is filled in from the resident\'s request. Check it, then print.') + '</div>' +
-        certificateHtml(t) +
+        '<div class="cert-note">Request <b>' + esc(t.tracking_no) + '</b> &middot; ' + (onPrinted ? 'signed by the Captain. Printing this document releases it automatically. ' : 'the form is filled in from the resident\'s request. ') + 'Click any blank line to type or correct it, then print.' + '</div>' +
+        certificateHtml(t, true) +
         '<div class="modal-actions cert-actions"><button type="button" class="btn-primary" id="certPrint">' + (onPrinted ? 'Print &amp; release' : 'Print this certificate') + '</button>' +
         '<button type="button" class="btn-light" id="certClose">Close</button></div>');
       body.querySelector('#certPrint').addEventListener('click', function () { printCertificate(onPrinted ? function () { onPrinted(t.id); } : null); });
       body.querySelector('#certClose').addEventListener('click', closeModal);
+      body.addEventListener('focusin', function (e) {    // an empty blank starts clean (no stray space before what you type)
+        if (e.target.classList && e.target.classList.contains('f2v') && !e.target.textContent.trim()) e.target.innerHTML = '';
+      });
+      body.addEventListener('focusout', function (e) {
+        if (e.target.classList && e.target.classList.contains('f2v') && !e.target.textContent.trim()) e.target.innerHTML = '&nbsp;';
+      });
+      body.addEventListener('click', function (e) {      // tick / untick the purpose boxes of the Certificate of Indigency
+        var b = e.target.closest && e.target.closest('.f2chk');
+        if (b) b.innerHTML = /10003|✓/.test(b.innerHTML) ? '(&nbsp;&nbsp;)' : '(&#10003;)';
+      });
     } catch (err) {
       showToast(err.message, true);
     }
