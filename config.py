@@ -91,7 +91,7 @@ class Config:
 
     # ---- Edit these to match your barangay (home page) ----
     BARANGAY = "Brgy. Sto Niño, Baliuag City, Bulacan"
-    ABOUT = (
+    ABOUT ON = (
         "Barangay-On is the online portal of our barangay. Residents can request certificates and "
         "permits, file complaints and community reports, and follow every request from their own "
         "account, without waiting in line at the barangay hall."
@@ -104,7 +104,7 @@ class Config:
         ("Fire Station", "0917 000 0003"),
     ]
     OFFICE_HOURS = "Monday to Sunday, 24/7"
-    EMAIL = "info@barangay-sample.example"
+    EMAIL = "stoninobaliwagcity@gmail.com"
 
 
 class TestConfig(Config):
