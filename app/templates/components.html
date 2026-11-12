@@ -275,12 +275,13 @@
 <section class="set-panel" data-panel="account">{{ account_security_app() }}</section>
 {% elif section == 'notifications' %}
 <section class="set-panel" data-panel="notifications" data-group="notifications"><div class="card"><h2>Notification preferences</h2>
-<p class="lead">Choose which optional notifications appear in your list below.</p>
+<p class="lead">Choose which optional notifications appear in your Notifications list.</p>
 {{ toggle('notify_announcements', 'Announcements', 'Tell me when the barangay posts a new announcement.') }}
 {% if is_resident %}{{ toggle('notify_requests', 'Request status updates', 'Tell me when my document, complaint or report changes status.') }}{% endif %}
 <div class="set-note"><strong>Critical alerts are separate.</strong> Emergency and other critical alerts are always delivered and cannot be switched off here.</div>
 <div class="set-note">E-mail and SMS notifications are not available yet, so they are not listed.</div>
 {{ actions('notifications') }}</div></section>
+{% elif section == 'inbox' %}
 <section class="set-panel" data-panel="inbox"><h2 class="set-sub">Your notifications</h2>{{ notifications_app() }}</section>
 {% elif section == 'privacy' %}
 <section class="set-panel" data-panel="privacy"><div class="card set-help"><h2>Privacy &amp; data use</h2>
