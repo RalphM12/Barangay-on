@@ -107,3 +107,28 @@ def test_production_refuses_to_start_without_secret_key(monkeypatch):
         importlib.reload(config)
     monkeypatch.delenv("APP_ENV")
     importlib.reload(config)
+
+
+def test_database_settings_from_wasmer_names(monkeypatch):
+    import importlib
+    import config
+    try:
+        import dotenv
+        monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: None)
+    except ImportError:
+        pass
+    for k in ("DATABASE_URL", "DB_USER", "APP_ENV"):
+        monkeypatch.delenv(k, raising=False)
+    for k, v in dict(DB_HOST="db.example", DB_PORT="3307", DB_NAME="barangay", DB_USERNAME="appuser", DB_PASSWORD="p@ss:word").items():
+        monkeypatch.setenv(k, v)
+    importlib.reload(config)
+    assert config._database_url().startswith("mysql+pymysql://appuser:p%40ss%3Aword@db.example:3307/barangay")
+    for k in ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD"):
+        monkeypatch.delenv(k)
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "k" * 40)
+    with pytest.raises(RuntimeError):
+        importlib.reload(config)
+        config._database_url()
+    monkeypatch.delenv("APP_ENV")
+    importlib.reload(config)
