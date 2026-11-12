@@ -1,5 +1,5 @@
 {% extends "public_base.html" %}
-{% from "macros.html" import brand_mark, eye_button, watermark %}
+{% from "macros.html" import brand_mark, eye_button %}
 {% set page_css = 'login' %}{% set body_class = 'gp-auth' %}
 {% block title %}Login | Barangay-On{% endblock %}
 {% block nav %}
@@ -33,7 +33,6 @@
         </div>
         {% endif %}
       </div>
-      {{ watermark() }}
     </section>
 
     <section class="split-right">
