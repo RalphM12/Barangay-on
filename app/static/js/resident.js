@@ -7,6 +7,15 @@
     $('#greeting').textContent = 'Good day, ' + d.user.name.split(' ')[0];
     $('#userName').textContent = d.user.name;
 
+    if (d.resident_status && d.resident_status !== 'Registered') {
+      var vb = $('#verifyBanner');
+      vb.innerHTML = d.resident_status === 'Pending'
+        ? '<b>Waiting for Verification.</b> The barangay office has not registered you yet. You can request documents, file complaints and send community reports once you are registered.'
+        : '<b>Your resident record is not active.</b> Please contact the barangay office.';
+      vb.hidden = false;
+      document.querySelectorAll('.services .svc').forEach(function (a) { a.classList.add('is-locked'); a.setAttribute('aria-disabled', 'true'); a.removeAttribute('href'); });
+    }
+
     $('#stPending').textContent    = d.stats.pending;
     $('#stProcessing').textContent = d.stats.processing;
     $('#stCompleted').textContent  = d.stats.completed;

@@ -74,7 +74,7 @@
   function initReveal() {
     if (reduce || !('IntersectionObserver' in window)) return;
     var groups = [
-      '.band .two-col > *', '.svc-grid .svc', '.band h2', '.section-sub', '.link-cta',
+      '.band .two-col > *', '.svc-grid .svc', '.off-grid .off', '.band h2', '.section-sub', '.link-cta',
       '.ann-list article', '.hot-list', '.gallery img', '.gallery + *'
     ];
     var items = [];

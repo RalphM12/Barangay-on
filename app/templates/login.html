@@ -41,7 +41,7 @@
         <h2>Log in</h2>
         <p class="sub">Use the username and password of your account.</p>
         {% if registered and not error %}
-          <div class="notice" role="status">Account created. Log in to start requesting documents.</div>
+          <div class="notice" role="status">Account created. Your registration is Waiting for Verification by the barangay office. You can log in now, but you can request documents, file complaints or reports only after you are registered.</div>
         {% endif %}
         {% if error %}
           <div class="error" role="alert">{{ error }}</div>
@@ -58,10 +58,6 @@
         </form>
         <div class="or-divider"><span>New to the portal?</span></div>
         <a class="btn btn-outline" href="{{ url_for('public.register') }}">Register as Resident</a>
-        <p class="help">
-          <strong>Demo accounts</strong> (password: <b>password</b>):
-          <code>admin</code> <code>staff</code> <code>captain</code> <code>resident</code>
-        </p>
         <p class="help help-last"><strong>Can't log in?</strong> Visit the barangay hall and ask the staff to reset your account.</p>
       </div>
     </section>

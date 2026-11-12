@@ -58,7 +58,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-
 .band-white { background: #fff; }
 /* each menu section fills the screen so a click lands cleanly on it */
 #about, #services, #hotlines, #gallery { min-height: calc(100vh - var(--bar-h)); display: flex; align-items: center; }
-#about .wrap, #services .wrap, #hotlines .wrap, #gallery .wrap { width: 100%; }
+/* About + Officials sit together on one screen: no full-height gap between them */
+#about { min-height: 0; padding-bottom: 28px; }
+#officials { padding-top: 28px; }
+#about .wrap, #officials .wrap, #services .wrap, #hotlines .wrap, #gallery .wrap { width: 100%; }
 .wrap { max-width: 1040px; margin: 0 auto; }
 .band h2 { font-size: 24px; font-weight: 800; letter-spacing: -.4px; }
 .section-sub { margin-top: 6px; font-size: 14px; color: var(--muted); }
@@ -73,6 +76,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-
 .svc h3 { font-size: 15px; font-weight: 700; }
 .svc ul { list-style: none; margin-top: 10px; }
 .svc li { padding: 8px 0; border-bottom: 1px solid #e6e2d8; font-size: 14px; }
+.off-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 32px 28px; margin-top: 28px; }
+.off { text-align: center; }
+.off-photo { display: block; width: 128px; height: 128px; margin: 0 auto 14px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold); background: var(--navy); }
+.off-initials { display: grid; place-items: center; color: #fff; font-size: 38px; font-weight: 800; letter-spacing: 1px; }
+.off h3 { font-size: 16px; font-weight: 800; }
+.off p { margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.off-captain .off-photo { width: 152px; height: 152px; }
 .link-cta { display: inline-block; margin-top: 26px; font-size: 14px; font-weight: 700; color: var(--navy); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--gold); text-decoration-thickness: 2px; }
 
 .ann-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px; margin-top: 22px; }

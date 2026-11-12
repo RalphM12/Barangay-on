@@ -1,5 +1,6 @@
 """Database models (SQLAlchemy). Works on SQLite (dev/testing) and MySQL (deployment)."""
-from datetime import datetime
+import os
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.dialects import mysql
 from flask_sqlalchemy import SQLAlchemy
@@ -10,9 +11,25 @@ db = SQLAlchemy()
 LongText = db.Text().with_variant(mysql.MEDIUMTEXT(), "mysql")
 
 
+def _load_tz():
+    """Barangay local time (Philippines by default). Set APP_TIMEZONE to change it.
+
+    Hosts such as Wasmer run in UTC, so the server clock must not be used directly.
+    """
+    name = os.environ.get("APP_TIMEZONE", "Asia/Manila")
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name)
+    except Exception:  # no tz database on this host: Philippines has no daylight saving, UTC+8
+        return timezone(timedelta(hours=8)) if name == "Asia/Manila" else timezone.utc
+
+
+APP_TZ = _load_tz()
+
+
 def now() -> datetime:
-    """Local server time without microseconds (same idea as MySQL NOW())."""
-    return datetime.now().replace(microsecond=0)
+    """Current barangay time (naive, no microseconds) for storing in the database."""
+    return datetime.now(APP_TZ).replace(microsecond=0, tzinfo=None)
 
 
 class User(db.Model):

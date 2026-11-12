@@ -111,7 +111,7 @@
       chosen = r;
       walkin = false;
       setField('afNo', r.resident_no);
-      setField('afStatus', r.status);
+      setField('afStatus', r.status === 'Pending' ? 'Waiting for Verification' : r.status);
       known = {
         name: (r.first_name + ' ' + r.last_name).trim(), address: r.address || '', contact: r.contact_no || '',
         birth: /^\d{4}-\d{2}-\d{2}$/.test(r.birthdate || '') ? r.birthdate : '', civil: r.civil_status || ''
@@ -119,7 +119,7 @@
       applyKnown();
       var problems = [];
       if (!r.address) problems.push('This resident has no address on record - add it on the Residents page first.');
-      if (r.status !== 'Registered') problems.push('This resident is ' + r.status + ', not Registered.');
+      if (r.status !== 'Registered') problems.push('This resident is ' + (r.status === 'Pending' ? 'Waiting for Verification' : r.status) + ', not Registered yet. Register the resident on the Residents page first.');
       note(problems.length ? problems.join(' ') : 'Details from the resident record are filled in. Check them, complete the rest of the form, then save.', problems.length > 0);
       refresh();
     }
@@ -145,7 +145,7 @@
       } else {
         ul.innerHTML = rows.map(function (r, i) {
           return '<li role="option" data-i="' + i + '" aria-selected="false">' + esc(r.first_name + ' ' + r.last_name) +
-            (r.status !== 'Registered' ? ' <small>(' + esc(r.status) + ')</small>' : '') +
+            (r.status !== 'Registered' ? ' <small>(' + esc(r.status === 'Pending' ? 'Waiting for Verification' : r.status) + ')</small>' : '') +
             (r.same_name ? ' <small>(same name as another resident - check the address)</small>' : '') +
             '<small>' + esc(r.address || 'No address on record') + ' &middot; ' + esc(r.contact_no || 'No contact on record') + '</small></li>';
         }).join('') + walkLi;
