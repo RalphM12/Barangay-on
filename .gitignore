@@ -10,6 +10,12 @@ venv/
 .venv/
 .pytest_cache/
 
+# logs and local database files
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
 # local database and uploads (real user data must never be committed)
 instance/
 app/static/uploads/*
@@ -17,6 +23,7 @@ app/static/uploads/*
 
 # operating system / editor / archives
 .DS_Store
+Thumbs.db
 *.zip
 .idea/
 .vscode/
