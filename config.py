@@ -28,8 +28,7 @@ def _database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
     if url:
         return url
-    # Wasmer provides DB_USERNAME; it wins over a leftover DB_USER (for example "root" copied from a local .env)
-    user = os.environ.get("DB_USERNAME") or os.environ.get("DB_USER")
+    user = os.environ.get("DB_USERNAME") or os.environ.get("DB_USER")   # Wasmer provides DB_USERNAME
     if user:
         from sqlalchemy.engine import URL
         return URL.create(
@@ -41,18 +40,48 @@ def _database_url() -> str:
             database=os.environ.get("DB_NAME", "barangay_on"),
             query={"charset": "utf8mb4"},
         ).render_as_string(hide_password=False)
+    if PRODUCTION and os.environ.get("ALLOW_SQLITE", "0") != "1":
+        # a SQLite file on a host such as Wasmer is wiped on restart: accounts and requests would vanish
+        raise RuntimeError("No database settings found (DATABASE_URL, or DB_HOST / DB_USERNAME / DB_PASSWORD / DB_NAME). "
+                           "Enable the database in your host so data is saved permanently.")
     return f"sqlite:///{INSTANCE_DIR / 'barangay_on.db'}"
 
 
+PRODUCTION = os.environ.get("APP_ENV", "").strip().lower() == "production"
+
+
+def _secret_key() -> str:
+    """SECRET_KEY signs the login cookie. There is no public default any more: with no key set, a random
+    one is made for this run (everyone is logged out on restart) and, in production, the app refuses to start."""
+    key = os.environ.get("SECRET_KEY", "").strip()
+    if key:
+        if len(key) < 32 and PRODUCTION:
+            raise RuntimeError("SECRET_KEY is too short. Use at least 32 random characters "
+                               "(python3 -c \"import secrets; print(secrets.token_hex(32))\").")
+        return key
+    if PRODUCTION:
+        raise RuntimeError("SECRET_KEY is not set. Set it in the host's environment variables "
+                           "(python3 -c \"import secrets; print(secrets.token_hex(32))\") before running in production.")
+    import secrets
+    print(" ! SECRET_KEY is not set: using a temporary random key (fine for testing; set a real one in .env or the host).")
+    return secrets.token_hex(32)
+
+
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me-in-production")
+    SECRET_KEY = _secret_key()
+    APP_ENV = "production" if PRODUCTION else "development"
+    # Demo accounts (admin/staff/captain/resident, password "password") can only log in when this is switched on,
+    # which only happens with `python main.py --demo` on your own computer.
+    ALLOW_DEMO_LOGINS = os.environ.get("ALLOW_DEMO_LOGINS", "0") == "1"
+    # How many reverse proxies sit in front of the app (Wasmer, nginx...). Needed to see the visitor's real IP.
+    TRUSTED_PROXIES = int(os.environ.get("TRUSTED_PROXIES", "1" if PRODUCTION else "0"))
     SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "0") == "1"
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "1" if PRODUCTION else "0") == "1"
 
     # Uploads (profile photos). Stored on the server, outside any user-controlled path.
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", str(BASE_DIR / "app" / "static" / "uploads"))
@@ -82,3 +111,4 @@ class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     SECRET_KEY = "test"
+    ALLOW_DEMO_LOGINS = False

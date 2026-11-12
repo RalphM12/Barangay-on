@@ -18,8 +18,7 @@ from .models import (
     Announcement, Notification, Resident, Service, Transaction, User, UserPermission, db, now,
 )
 
-# bcrypt of the word "password" (same hash the original SQL file used)
-DEMO_HASH = "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
+from .core import DEMO_PASSWORD_HASH as DEMO_HASH  # bcrypt of the word "password": demo accounts only
 
 
 def load_sample_data():
@@ -150,6 +149,49 @@ def load_sample_data():
     db.session.commit()
 
 
+BASE_SERVICES = [
+    ("Barangay Clearance", "document"), ("Certificate of Residency", "document"),
+    ("Certificate of Indigency", "document"), ("Business Permit", "document"),
+    ("Noise Complaint", "complaint"), ("Neighbor Dispute", "complaint"),
+    ("Missing Person", "report"), ("Suspicious Activity", "report"), ("Broken Streetlight", "report"),
+    ("Others", "complaint"), ("Others", "report"),
+]
+
+
+def bootstrap_from_env():
+    """For a real (non-demo) site. On an empty database add the service list, and create the first administrator
+    from the ADMIN_USERNAME / ADMIN_PASSWORD (/ ADMIN_NAME) environment variables. Does nothing when they are not set,
+    or when that username already exists. Remove ADMIN_PASSWORD from the host once you can log in."""
+    import logging
+    import os
+    log = logging.getLogger("barangay-on")
+    try:
+        if not db.session.scalar(select(Service.id).limit(1)) and not db.session.scalar(select(User.id).limit(1)):
+            for name, cat in BASE_SERVICES:
+                db.session.add(Service(name=name, category=cat))
+            db.session.commit()
+        username = os.environ.get("ADMIN_USERNAME", "").strip()
+        password = os.environ.get("ADMIN_PASSWORD", "")
+        if not username or not password:
+            return
+        if db.session.scalar(select(User.id).where(User.username == username)):
+            return
+        from .core import password_problem
+        problem = password_problem(password, username)
+        if problem:
+            log.warning("ADMIN_PASSWORD was not used: %s", problem)
+            return
+        db.session.add(User(username=username, password_hash=hash_password(password),
+                            full_name=os.environ.get("ADMIN_NAME", "").strip() or "Administrator",
+                            position="Administrator", role="admin"))
+        db.session.commit()
+        log.warning("Administrator account '%s' created from ADMIN_USERNAME / ADMIN_PASSWORD. "
+                    "Remove ADMIN_PASSWORD from the environment now.", username)
+    except Exception as exc:
+        db.session.rollback()
+        log.warning("First-run setup skipped: %s", str(exc).splitlines()[0][:160])
+
+
 def _create_mysql_database_if_missing():
     """With MySQL, create the (empty) database named in DATABASE_URL when it does not exist yet."""
     from sqlalchemy import create_engine, text
@@ -204,6 +246,22 @@ def register_cli(app):
             return
         load_sample_data()
         click.echo("Sample data loaded.")
+
+    @app.cli.command("set-password")
+    @click.option("--username", prompt=True)
+    @click.password_option()
+    def set_password(username, password):
+        """Set a new password for any account (use this to replace a demo password)."""
+        from .core import password_problem
+        row = db.session.scalar(select(User).where(User.username == username))
+        if not row:
+            raise click.ClickException("No such username.")
+        problem = password_problem(password, username)
+        if problem:
+            raise click.ClickException(problem)
+        row.password_hash = hash_password(password)
+        db.session.commit()
+        click.echo("Password updated.")
 
     @app.cli.command("create-admin")
     @click.option("--username", prompt=True)

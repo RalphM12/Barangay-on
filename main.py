@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """One command to get Barangay-On running with MySQL:
 
-    python start.py            check MySQL -> create database + tables -> load demo data (first time only) -> start the site
-    python start.py --sqlite   skip MySQL and use a local SQLite file (testing only)
-    python start.py --reset    ERASE everything and reload the demo data
-    python start.py --port 5050
+    python main.py --demo      check MySQL -> create database + tables -> load DEMO data and demo logins (your own computer only)
+    python main.py             same, but NO demo data: set ADMIN_USERNAME / ADMIN_PASSWORD to create the first administrator
+    python main.py --sqlite    skip MySQL and use a local SQLite file (testing only, includes demo data)
+    python main.py --reset     ERASE everything and reload the demo data
+    python main.py --port 5050
 
+On a host, set APP_ENV=production, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD (see README, 'Going live').
 Edit the DB_* lines in the .env file next to this script if your MySQL user / password / port differ.
 """
 import argparse
@@ -15,8 +17,13 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--sqlite", action="store_true", help="use SQLite instead of MySQL")
 parser.add_argument("--reset", action="store_true", help="erase all data and reload the demo data")
+parser.add_argument("--demo", action="store_true", help="load demo data and allow the demo logins (local testing only)")
 parser.add_argument("--port", type=int, default=5000)
-args = parser.parse_args()
+# `python main.py` reads the options above. When a host imports this file as a module (main:app) there are none.
+args = parser.parse_args() if __name__ == "__main__" else parser.parse_args([])
+
+if args.demo or args.sqlite or args.reset:
+    os.environ["ALLOW_DEMO_LOGINS"] = "1"  # demo accounts can only log in when you asked for demo mode
 
 if args.sqlite:
     for k in ("DATABASE_URL", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"):
@@ -44,9 +51,11 @@ def explain(exc):
      * XAMPP / MAMP:     open the app and press Start next to MySQL
      * Docker:           docker compose up -d     (uses docker-compose.yml in this folder)
      * MAMP uses port 8889: set DB_PORT=8889 and DB_PASSWORD=root in .env
-     No MySQL yet? Test right now with:  python start.py --sqlite""")
+     No MySQL yet? Test right now with:  python main.py --sqlite""")
+    elif "1044" in t:
+        print("\n  -> This MySQL user may not use that database. Check DB_NAME and that the user has access to it.")
     elif "1045" in t or "Access denied" in t:
-        print("\n  -> Wrong MySQL user or password. Check DB_USERNAME / DB_PASSWORD (or DB_USER) on the host or in .env. On Wasmer remove DB_USER=root.")
+        print("\n  -> Wrong MySQL user or password. Check DB_USERNAME / DB_PASSWORD (or DB_USER) on the host or in .env.")
     elif "pymysql" in t.lower() and "No module" in t:
         print("\n  -> Run:  pip install -r requirements.txt")
     sys.exit(1)
@@ -84,13 +93,21 @@ with app.app_context():
         added = upgrade_schema()  # also upgrades tables left by the older PHP version
         if added:
             print("  database upgraded, added columns: " + ", ".join(added))
-        if args.reset or not db.session.scalar(select(User.id).limit(1)):
+        empty = not db.session.scalar(select(User.id).limit(1))
+        if args.reset or (empty and app.config["ALLOW_DEMO_LOGINS"]):
             load_sample_data()
-            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password")
+            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password   (LOCAL TESTING ONLY)")
+        elif empty:
+            print("  database is empty and no demo data was loaded. Set ADMIN_USERNAME and ADMIN_PASSWORD to create the first administrator.")
         else:
             print("  tables OK, existing data kept")
     except Exception as exc:
         explain(exc)
 
-print(f"\n  Open  http://localhost:{args.port}   (Ctrl+C to stop)\n")
-app.run(port=args.port, debug=False)
+if __name__ == "__main__":
+    # On a host (Wasmer...) listen on every address and on the port it gives us; on your computer stay on localhost.
+    hosted = bool(os.environ.get("PORT")) or app.config["APP_ENV"] == "production"
+    host = "0.0.0.0" if hosted else "127.0.0.1"
+    port = int(os.environ.get("PORT") or args.port)
+    print(f"\n  Open  http://localhost:{port}   (Ctrl+C to stop)\n" if not hosted else f"\n  Listening on {host}:{port}\n")
+    app.run(host=host, port=port, debug=False)
