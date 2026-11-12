@@ -532,7 +532,8 @@ def my_transactions():
     return jsonify({
         "rows": data, "services": services,
         "profile": {"resident_no": reg_no(resident.id), "name": f"{resident.first_name} {resident.last_name}",
-                    "address": resident.address, "contact_no": resident.contact_no, "status": resident.status},
+                    "address": resident.address, "contact_no": resident.contact_no, "status": resident.status,
+                    "birthdate": resident.birthdate.strftime("%Y-%m-%d") if resident.birthdate else "", "civil_status": resident.civil_status or ""},
         "purposes": DOC_PURPOSES, "civil_statuses": CIVIL_STATUSES, "today": date.today().strftime("%Y-%m-%d"),
     })
 
