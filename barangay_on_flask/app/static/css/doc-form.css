@@ -1,0 +1,247 @@
+/* Resident > Documents > "Request a Document" form.
+   Loaded AFTER glass.css (see the late_css block in layout.html) so it wins over the older
+   resident.css / pages.css / glass.css layers. Scoped to #myApp.document-request, so the
+   staff "New document request" window and the request-details modal are not affected.
+   Uses the theme tokens from glass.css (--ink, --accent, --field ...) so light and dark both work. */
+
+/* pages.css gives this card a hard-coded white gradient (selector with an ID), which makes the
+   form unreadable in dark mode. Use the theme surface instead so it follows light / dark. */
+html[data-scheme] body #myApp.document-request {
+  padding: clamp(18px, 3vw, 34px);
+  border-radius: 24px;
+  color: var(--ink);
+  background: var(--g-bg-strong);
+  border: 1px solid var(--g-line);
+  box-shadow: var(--g-shadow), inset 0 1px 0 var(--g-rim-hi);
+}
+
+/* ---------- heading: flat, no box inside a box ---------- */
+html[data-scheme] body #myApp.document-request .document-heading {
+  display: block;
+  margin: 0 0 24px;
+  padding: 0 0 22px;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-scheme] body #myApp.document-request .document-heading::after { display: none; }
+html[data-scheme] body #myApp.document-request .document-heading > div { display: block; max-width: none; padding: 0; }
+html[data-scheme] body #myApp.document-request .eyebrow {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 0;
+  border-radius: 999px;
+}
+html[data-scheme] body #myApp.document-request .document-heading h2 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 3vw, 31px);
+  line-height: 1.18;
+  font-weight: 750;
+  letter-spacing: -.025em;
+  color: var(--ink);
+}
+html[data-scheme] body #myApp.document-request .document-heading p {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* ---------- document type picker: the first thing to do, so it gets its own panel ---------- */
+html[data-scheme] body #myApp.document-request > .document-form > .document-type-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 18px 18px;
+  max-width: none;
+  background: color-mix(in srgb, var(--accent) 6%, var(--g-bg-soft));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--hair));
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* ---------- details section: open layout, no second card ---------- */
+html[data-scheme] body #myApp.document-request .document-section {
+  margin: 26px 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-scheme] body #myApp.document-request .document-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  color: var(--ink);
+}
+
+/* ---------- field grid: two columns, short answers sit side by side ---------- */
+html[data-scheme] body #myApp.document-request .document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 20px;
+}
+html[data-scheme] body #myApp.document-request .document-grid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+html[data-scheme] body #myApp.document-request .document-grid > label.wide { grid-column: 1 / -1; }
+/* short answers (date, phone, number, dropdown, year, income) take half a row */
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[type="date"]),
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[type="tel"]),
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[type="number"]),
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[name="residency_start"]),
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[name="monthly_income"]),
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> select) {
+  grid-column: auto;
+}
+/* the "Please specify your purpose" box always gets a full row when it appears */
+html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input[name="purpose_other"]) {
+  grid-column: 1 / -1;
+}
+
+/* ---------- inputs ---------- */
+html[data-scheme] body #myApp.document-request :is(input:not([type="radio"]), select, textarea) {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink);
+  background-color: var(--field);
+  border: 1px solid var(--field-line);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .04);
+}
+html[data-scheme] body #myApp.document-request select { padding-right: 38px; cursor: pointer; }
+html[data-scheme] body #myApp.document-request select option { background: var(--bg-base); color: var(--ink); }
+html[data-scheme] body #myApp.document-request textarea { min-height: 96px; resize: vertical; }
+html[data-scheme] body #myApp.document-request :is(input, textarea)::placeholder { color: var(--ink-soft); opacity: .7; }
+html[data-scheme] body #myApp.document-request :is(input:not([type="radio"]), select, textarea):hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--field-line));
+}
+html[data-scheme] body #myApp.document-request :is(input:not([type="radio"]), select, textarea):focus,
+html[data-scheme] body #myApp.document-request :is(input:not([type="radio"]), select, textarea):focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background-color: var(--g-bg-strong);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+/* pre-filled values (name, address, phone) read as normal text, not bold */
+html[data-scheme] body #myApp.document-request .document-grid input,
+html[data-scheme] body #myApp.document-request .document-grid select,
+html[data-scheme] body #myApp.document-request .document-grid textarea { font-weight: 400; }
+
+/* ---------- radio choices: a row of selectable pills ---------- */
+html[data-scheme] body #myApp.document-request .radio-options {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+}
+html[data-scheme] body #myApp.document-request .radio-option {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  width: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 18px 0 14px;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--field-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transform: none;
+  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+html[data-scheme] body #myApp.document-request .radio-option:hover {
+  transform: none;
+  background: var(--hover);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--field-line));
+}
+html[data-scheme] body #myApp.document-request .radio-option:has(input:checked) {
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--ink);
+  font-weight: 650;
+}
+html[data-scheme] body #myApp.document-request .radio-option:has(input:focus-visible) {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: var(--accent);
+}
+html[data-scheme] body #myApp.document-request .radio-option input[type="radio"] {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* ---------- submit ---------- */
+html[data-scheme] body #myApp.document-request .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--hair);
+}
+html[data-scheme] body #myApp.document-request .form-actions .btn-primary {
+  min-height: 48px;
+  padding: 0 34px;
+  font-size: 15px;
+  font-weight: 650;
+}
+html[data-scheme] body #myApp.document-request .form-actions .btn-primary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 3px;
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 700px) {
+  html[data-scheme] body #myApp.document-request { padding: 18px; border-radius: 20px; }
+  html[data-scheme] body #myApp.document-request .document-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  html[data-scheme] body #myApp.document-request .document-grid > label.wide,
+  html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> input),
+  html[data-scheme] body #myApp.document-request .document-grid > label.wide:has(> select) { grid-column: auto; }
+  html[data-scheme] body #myApp.document-request .radio-option { flex: 1 1 calc(50% - 10px); }
+  html[data-scheme] body #myApp.document-request .form-actions .btn-primary { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-scheme] body #myApp.document-request * { transition: none !important; animation: none !important; }
+}

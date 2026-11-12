@@ -7,7 +7,6 @@
 {% block nav %}
       <a href="#home" class="active">Home</a>
       <a href="#about">About Barangay</a>
-      {% if officials %}<a href="#officials">Officials</a>{% endif %}
       <a href="#services">Services</a>
       <a href="#hotlines">Hotlines</a>
       <a href="#gallery">Gallery</a>
@@ -18,13 +17,13 @@
   <main>
     <section class="hero" id="home" aria-label="Welcome">
       <div class="slides">
-        {% for n in range(1, hero_count + 1) %}
-          <div class="slide{% if loop.first %} on{% endif %}"><div class="photo" style="background-image:url('{{ url_for('static', filename='img/hero/%d.jpg' % n) }}')"></div></div>
+        {% for m in murals %}
+          <div class="slide{% if loop.first %} on{% endif %}">{{ m }}<div class="photo" style="background-image:url('{{ url_for('static', filename='img/hero/%d.jpg' % loop.index) }}')"></div></div>
         {% endfor %}
       </div>
       <div class="hero-shade"></div>
       <div class="hero-body">
-        <img class="hero-logo" src="{{ url_for('static', filename='img/brand/logo-dark.png') }}" alt="Barangay-On: Online Barangay Services" width="420" height="90">
+        <span class="hero-emblem">{{ brand_mark(2, 1.3, 3.2, 3.2, 2.6) }}</span>
         <p class="hero-kicker">Barangay Management System</p>
         <h1>{{ barangay }}</h1>
         <p class="hero-sub">Online Resident Portal</p>
@@ -35,7 +34,7 @@
         </div>
       </div>
       <div class="dots" role="tablist" aria-label="Slides">
-        {% for n in range(1, hero_count + 1) %}<button type="button" class="dot{% if loop.first %} on{% endif %}" aria-label="Show slide {{ n }}"></button>{% endfor %}
+        {% for m in murals %}<button type="button" class="dot{% if loop.first %} on{% endif %}" aria-label="Show slide {{ loop.index }}"></button>{% endfor %}
       </div>
     </section>
 
@@ -53,26 +52,7 @@
       </div>
     </section>
 
-    {% if officials %}
-    <section class="band band-white" id="officials">
-      <div class="wrap">
-        <h2>Barangay officials</h2>
-        <p class="section-sub">The people serving our community.</p>
-        <div class="off-grid">
-          {% for o in officials %}
-            <article class="off off-{{ o.role }}">
-              {% if o.photo %}<img class="off-photo" src="{{ o.photo }}" alt="{{ o.name }}" loading="lazy">
-              {% else %}<span class="off-photo off-initials" aria-hidden="true">{{ o.initials }}</span>{% endif %}
-              <h3>{{ o.name }}</h3>
-              <p>{{ o.position }}</p>
-            </article>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-    {% endif %}
-
-    <section class="band{% if not officials %} band-white{% endif %}" id="services">
+    <section class="band band-white" id="services">
       <div class="wrap">
         <h2>Services you can use online</h2>
         <p class="section-sub">Log in to send a request and follow its status.</p>

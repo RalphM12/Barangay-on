@@ -28,13 +28,11 @@ def _database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
     if url:
         return url
-    # Wasmer provides DB_USERNAME; it wins over a leftover DB_USER (for example "root" copied from a local .env)
-    user = os.environ.get("DB_USERNAME") or os.environ.get("DB_USER")
-    if user:
+    if os.environ.get("DB_USER"):
         from sqlalchemy.engine import URL
         return URL.create(
             "mysql+pymysql",
-            username=user,
+            username=os.environ["DB_USER"],
             password=os.environ.get("DB_PASSWORD", ""),
             host=os.environ.get("DB_HOST", "127.0.0.1"),
             port=int(os.environ.get("DB_PORT", "3306")),
@@ -61,7 +59,7 @@ class Config:
     JSON_SORT_KEYS = False
 
     # ---- Edit these to match your barangay (home page) ----
-    BARANGAY = "Brgy. Sto Niño, Baliuag City, Bulacan"
+    BARANGAY = "Barangay Sample, Sample City, Philippines"
     ABOUT = (
         "Barangay-On is the online portal of our barangay. Residents can request certificates and "
         "permits, file complaints and community reports, and follow every request from their own "

@@ -8,7 +8,7 @@ from markupsafe import Markup, escape
 from config import Config
 
 from .core import ApiError, avatar_url, csrf_token, current_user, get_user_settings, log_activity
-from .models import APP_TZ, db, now as local_now
+from .models import db
 
 
 class JSONProvider(DefaultJSONProvider):
@@ -117,7 +117,7 @@ def create_app(config_object=Config):
             db.session.rollback()
             users, dbinfo = {}, "Not reachable"
         return {"framework": f"Flask {flask_version}", "database": dbinfo, "python": platform.python_version(),
-                "time": local_now().strftime("%b %d, %Y %I:%M %p"), "tz": getattr(APP_TZ, "key", None) or str(APP_TZ), "users": users}
+                "time": datetime.now().strftime("%b %d, %Y %I:%M %p"), "tz": time.tzname[0], "users": users}
 
     from .nav import notifications_url, profile_url, ui_icon, settings_sections, nav_items
     app.jinja_env.globals.update(

@@ -82,9 +82,6 @@ function greeting() {
 }
 
 // An approved document is a released document (the captain signed it)
-var RES_LABELS = { Pending: 'Waiting for Verification' };   // resident status shown to people
-function resLabel(status) { return RES_LABELS[status] || status; }
-
 function badge(status) {
   return '<span class="badge ' + slug(status) + '">' + esc(status) + '</span>';
 }

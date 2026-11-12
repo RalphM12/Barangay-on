@@ -46,7 +46,7 @@ def explain(exc):
      * MAMP uses port 8889: set DB_PORT=8889 and DB_PASSWORD=root in .env
      No MySQL yet? Test right now with:  python start.py --sqlite""")
     elif "1045" in t or "Access denied" in t:
-        print("\n  -> Wrong MySQL user or password. Check DB_USERNAME / DB_PASSWORD (or DB_USER) on the host or in .env. On Wasmer remove DB_USER=root.")
+        print("\n  -> Wrong MySQL user or password. Fix DB_USER / DB_PASSWORD in the .env file.")
     elif "pymysql" in t.lower() and "No module" in t:
         print("\n  -> Run:  pip install -r requirements.txt")
     sys.exit(1)
@@ -56,17 +56,10 @@ print(f"\nBarangay-On   database: {url.drivername.split('+')[0]}"
       + (f"  {url.host}:{url.port or 3306}  /  {url.database}  (user {url.username})" if is_mysql else "  (local file)"))
 
 if is_mysql:
-    try:
-        # Hosted databases (Wasmer, ...) give you a ready-made database and a user that may NOT create databases,
-        # so connect to that database directly first. Only create it when it really is missing (local MySQL).
-        try:
-            create_engine(url).connect().close()
-        except Exception as first:
-            if "1049" not in str(first) and "Unknown database" not in str(first):
-                raise
-            server = create_engine(url.set(database="mysql"))
-            with server.begin() as conn:
-                conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{url.database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
+    try:  # connect to the server first, create the database if it is missing
+        server = create_engine(url.set(database="mysql"))
+        with server.begin() as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{url.database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
         print("  connected to MySQL, database is ready")
     except Exception as exc:
         explain(exc)

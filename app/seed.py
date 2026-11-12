@@ -41,18 +41,18 @@ def load_sample_data():
     db.session.flush()  # MySQL enforces foreign keys: users must exist before the rows that point to them
 
     people = [
-        (1, 3, "Justine", "Agulto", "Purok 1, Brgy. Sto Niño", "Registered"),
-        (2, None, "Juan", "Dela Cruz", "Purok 2, Brgy. Sto Niño", "Registered"),
-        (3, None, "Maria", "Santos", "Purok 3, Brgy. Sto Niño", "Registered"),
-        (4, None, "Carlos", "Reyes", "Purok 1, Brgy. Sto Niño", "Registered"),
-        (5, None, "Ana", "Lopez", "Purok 4, Brgy. Sto Niño", "Registered"),
-        (6, None, "Pedro", "Ramos", "Purok 5, Brgy. Sto Niño", "Registered"),
-        (7, None, "Liza", "Mendoza", "Purok 2, Brgy. Sto Niño", "Registered"),
-        (8, None, "Jose", "Garcia", "Purok 3, Brgy. Sto Niño", "Registered"),
-        (9, None, "Rosa", "Bautista", "Purok 4, Brgy. Sto Niño", "Registered"),
-        (10, None, "Mark", "Villanueva", "Purok 5, Brgy. Sto Niño", "Registered"),
-        (11, None, "Grace", "Navarro", "Purok 1, Brgy. Sto Niño", "Registered"),
-        (12, None, "Noel", "Castillo", "Purok 2, Brgy. Sto Niño", "Pending"),
+        (1, 3, "Justine", "Agulto", "Purok 1, Brgy. Sample", "Registered"),
+        (2, None, "Juan", "Dela Cruz", "Purok 2, Brgy. Sample", "Registered"),
+        (3, None, "Maria", "Santos", "Purok 3, Brgy. Sample", "Registered"),
+        (4, None, "Carlos", "Reyes", "Purok 1, Brgy. Sample", "Registered"),
+        (5, None, "Ana", "Lopez", "Purok 4, Brgy. Sample", "Registered"),
+        (6, None, "Pedro", "Ramos", "Purok 5, Brgy. Sample", "Registered"),
+        (7, None, "Liza", "Mendoza", "Purok 2, Brgy. Sample", "Registered"),
+        (8, None, "Jose", "Garcia", "Purok 3, Brgy. Sample", "Registered"),
+        (9, None, "Rosa", "Bautista", "Purok 4, Brgy. Sample", "Registered"),
+        (10, None, "Mark", "Villanueva", "Purok 5, Brgy. Sample", "Registered"),
+        (11, None, "Grace", "Navarro", "Purok 1, Brgy. Sample", "Registered"),
+        (12, None, "Noel", "Castillo", "Purok 2, Brgy. Sample", "Pending"),
     ]
     for rid, uid, fn, ln, addr, st in people:
         db.session.add(Resident(id=rid, user_id=uid, first_name=fn, last_name=ln, address=addr,

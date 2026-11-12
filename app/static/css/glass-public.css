@@ -124,7 +124,7 @@ body.gp ::selection { background: color-mix(in srgb, var(--blue) 30%, transparen
 body.gp a:focus-visible, body.gp button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 10px; }
 
 /* ---------------------------------------------------------------- the glass material */
-body.gp :where(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .footer, .topbar) {
+body.gp :where(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .footer, .topbar) {
   background: var(--g-bg);
   border: 1px solid var(--g-line);
   box-shadow: var(--shadow), inset 0 1px 0 var(--rim-hi);
@@ -132,21 +132,21 @@ body.gp :where(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .fo
   --mx: 50%; --my: 0%; --glow: 0;
 }
 /* pointer-following specular light (set by glass-public.js) */
-body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::before {
+body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
   background: radial-gradient(440px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .34), transparent 46%);
   opacity: var(--glow, 0); transition: opacity .5s ease; mix-blend-mode: soft-light;
 }
 /* liquid rim */
-body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::after {
+body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .split-left, .hero-body)::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
   background: linear-gradient(140deg, var(--rim-hi), var(--rim-lo) 28%, transparent 55%, var(--rim-lo) 82%, var(--rim-hi));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
   opacity: .85;
 }
-body.gp :is(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list) > * { position: relative; z-index: 1; }
-body.gp :where(.form-wrap, .svc, .off, .facts, .ann-list article, .hot-list, .footer) { position: relative; }
+body.gp :is(.form-wrap, .svc, .facts, .ann-list article, .hot-list) > * { position: relative; z-index: 1; }
+body.gp :where(.form-wrap, .svc, .facts, .ann-list article, .hot-list, .footer) { position: relative; }
 
 /* ---------------------------------------------------------------- top bar: floating capsule + sliding lens */
 body.gp .topbar {
@@ -378,8 +378,6 @@ body.gp-home .facts { border-left: 1px solid var(--g-line); padding: 26px 28px; 
 body.gp-home .facts dt { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--muted); }
 body.gp-home .facts dd { font-size: 15.5px; font-weight: 600; }
 body.gp-home .svc-grid { gap: 20px; }
-body.gp-home .off-grid { gap: 20px; }
-body.gp-home .off { padding: 26px 16px 20px; border-radius: 28px; }
 body.gp-home .svc { border-top: 1px solid var(--g-line); padding: 26px 26px 18px; border-radius: 28px; transition: transform .6s var(--ease), box-shadow .5s var(--ease), background .35s ease; }
 body.gp-home .svc:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift), inset 0 1px 0 var(--rim-hi); background: var(--g-bg-strong); }
 body.gp-home .svc h3 { font-size: 17px; font-weight: 700; letter-spacing: -.025em; }
@@ -523,25 +521,3 @@ html.gp-theme-anim body.gp *, html.gp-theme-anim body.gp *::before, html.gp-them
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .55s; animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
 @media (max-width: 860px) { body.gp .theme-toggle { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { body.gp .theme-toggle, body.gp .theme-toggle svg { transition: none; } ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
-
-/* ---- Barangay-On brand logo (light + dark mode) ---- */
-.brand-icon { display: block; width: 100%; height: 100%; object-fit: contain; }
-.brand-wordmark { display: block; height: 30px; width: auto; }
-.brand-logo { display: inline-flex; align-items: center; }
-.brand-wordmark.wm-dark { display: none; }
-html[data-scheme="dark"] .brand-wordmark.wm-light { display: none; }
-html[data-scheme="dark"] .brand-wordmark.wm-dark { display: block; }
-body.gp .emblem, body.gp-home .hero-emblem {
-  padding: 0; border: 0; background: none; border-radius: 22%; overflow: hidden;
-  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, .55);
-}
-body.gp .emblem { width: 72px; height: 72px; }
-body.gp-home .hero-emblem { width: 112px; height: 112px; box-shadow: 0 0 0 7px rgba(255,255,255,.10), 0 24px 44px -16px rgba(0,0,0,.6); }
-@media (max-width: 640px) { .brand-wordmark { height: 24px; } body.gp-home .hero-emblem { width: 88px; height: 88px; padding: 0; } }
-
-/* ---- Home hero: full Barangay-On logo (white version, the hero is always dark) ---- */
-body.gp-home .hero-logo { display: block; width: min(420px, 78%); height: auto; margin: 0 auto 24px; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5)); }
-@media (max-width: 640px) { body.gp-home .hero-logo { width: min(300px, 82%); margin-bottom: 18px; } }
-
-/* Photo slideshow: slightly stronger shade so the white hero text stays readable on bright photos */
-body.gp-home .hero-shade { background: linear-gradient(180deg, rgba(10, 20, 45, .34), rgba(10, 20, 45, .62)); }

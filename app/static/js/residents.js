@@ -21,7 +21,7 @@
       $('#resBody').innerHTML = d.rows.map(function (r) {
         return '<tr><td>' + esc(r.first_name + ' ' + r.last_name) + '</td><td>' + esc(r.address || '-') + '</td>' +
           '<td>' + esc(r.contact_no || '-') + '</td>' +
-          '<td><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(resLabel(r.status)) + '</span></td>' +
+          '<td><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(r.status) + '</span></td>' +
           '<td>' + (Number(r.has_account) ? 'Yes' : 'No') + '</td><td>' + fmtDate(r.created_at) + '</td>' +
           '<td class="actions">' + (manage ? '<button type="button" class="btn-sm" data-edit="' + Number(r.id) + '">Edit</button>' : '') +
           (canDelete ? '<button type="button" class="btn-sm bad" data-del="' + Number(r.id) + '">Delete</button>' : '') + '</td>' +
@@ -53,7 +53,7 @@
     var age = ageOf(r.birthdate);
     return '<div class="rp-card"><div class="rp-photo">' + photo + '</div><div class="rp-info">' +
       '<strong>' + esc(r.first_name + ' ' + r.last_name) + '</strong>' +
-      '<div class="rp-sub"><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(resLabel(r.status)) + '</span> ' +
+      '<div class="rp-sub"><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(r.status) + '</span> ' +
       '<small class="muted">RES-' + String(r.id).padStart(5, '0') + (age !== '' ? ' &middot; ' + age + ' yrs old' : '') + '</small></div>' +
       '<div class="rp-meta"><span>Registered <b>' + fmtDate(r.created_at) + '</b></span>' +
       '<span>Online account <b>' + (Number(r.has_account) ? 'Yes' : 'No') + '</b></span>' +
@@ -109,10 +109,7 @@
       '<label>Address<input type="text" name="address" maxlength="150" list="addrList" autocomplete="off" value="' + esc(r.address) + '"><datalist id="addrList"></datalist></label>' +
       '<label>Contact number<input type="text" name="contact_no" inputmode="numeric" maxlength="11" value="' + esc(r.contact_no) + '"></label>' +
       '' + accountFields(r) +
-      (r.id && manage && r.status === 'Pending' ? '<input type="hidden" name="register" value="0" id="resRegFlag">' +
-        '<p class="verify-note">This resident is <b>Waiting for Verification</b> and cannot yet request documents, file complaints or send reports. Check the details above, then click <b>Verify This Resident</b>.</p>' : '') +
       '<div class="form-actions"><button type="submit" class="btn-primary">Save</button>' +
-      (r.id && manage && r.status === 'Pending' ? '<button type="button" class="btn-ok" id="resRegister">Verify This Resident</button>' : '') +
       (r.id && canDelete ? '<button type="button" class="btn-danger push" id="resDelete">Delete resident</button>' : '') + '</div></form>';
 
     var body = openModal(r.id ? 'Edit Resident' : 'Add Resident', html);
@@ -147,14 +144,6 @@
         else { pw.select(); document.execCommand('copy'); done(); }
       });
     }
-    var regBtn = body.querySelector('#resRegister');
-    if (regBtn) regBtn.addEventListener('click', function () {
-      if (!confirm('Verify ' + r.first_name + ' ' + r.last_name + '?\n\nThey will be registered and able to request documents, file complaints and send community reports.')) return;
-      body.querySelector('#resRegFlag').value = '1';
-      var f = body.querySelector('#resForm');
-      if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true }));
-      if (!f.checkValidity()) body.querySelector('#resRegFlag').value = '0';   // the browser stopped it: a field needs fixing
-    });
     var del = body.querySelector('#resDelete');
     if (del) del.addEventListener('click', function () { removeResident(r); });
     body.querySelector('#resForm').addEventListener('submit', async function (e) {
@@ -166,12 +155,11 @@
       btn.disabled = true;
       try {
         await postForm(api, form);
-        showToast(form.get('register') === '1' ? 'Resident verified and registered.' : 'Resident saved.');
+        showToast('Resident saved.');
         closeModal();
         load();
       } catch (err) {
         showToast(err.message, true);
-        var flag = this.querySelector('#resRegFlag'); if (flag) flag.value = '0';
         btn.disabled = false;
       }
     });

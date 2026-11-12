@@ -1,11 +1,9 @@
-{% from "macros.html" import brand_mark, brand_wordmark, theme_toggle %}
+{% from "macros.html" import brand_mark, theme_toggle %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/brand/icon-32.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/brand/icon-180.png') }}">
   <title>{% block title %}Barangay-On{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +17,8 @@
 <body class="gp {{ body_class }}">
   <header class="topbar">
     <a class="topbar-brand" href="{% block brand_href %}{{ url_for('public.index') }}{% endblock %}">
-      <span class="brand-logo">{{ brand_wordmark() }}</span>
+      <span class="brand-mark">{{ brand_mark() }}</span>
+      <span class="brand-name">Barangay<span>-On</span></span>
       <span class="brand-sub">{% block brand_sub %}Barangay Online Services Portal{% endblock %}</span>
     </a>
     <nav class="topbar-nav" aria-label="Main">
