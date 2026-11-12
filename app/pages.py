@@ -7,7 +7,7 @@ from flask import Blueprint, redirect, render_template, request, url_for
 from .core import (
     current_user, has_permission, require_full_access, require_permission, require_role, require_roles,
 )
-from .nav import folder_for, notifications_url, settings_sections
+from .nav import folder_for, settings_sections
 
 
 def render_page(role, active, title, subtitle="", component=None, scripts=(), **ctx):
@@ -18,6 +18,7 @@ def render_page(role, active, title, subtitle="", component=None, scripts=(), **
 SETTINGS_TITLES = {
     "general": ("General", "Language, date and time format, and where you start."),
     "appearance": ("Appearance", "Light or dark mode, font size and layout."),
+    "notifications": ("Notifications", "Choose which optional notifications you receive."),
     "account": ("Account & Security", "Your profile information and password."),
     "privacy": ("Privacy & Help", "Privacy policy, accessibility and support."),
     "system": ("System Configuration", "How this installation is set up."),
@@ -28,8 +29,6 @@ SETTINGS_TITLES = {
 def settings_page(layout_role, allowed_roles, settings_role):
     user = require_roles(allowed_roles)
     section = request.args.get("section", "general")
-    if section == "notifications":  # Notifications moved out of Settings to the sidebar
-        return redirect(notifications_url(user))
     keys = [k for k, *_ in settings_sections(user)]
     if section not in keys or section == "users":
         return redirect(url_for(f"{folder_for(user['role'])}.settings", section="general"))
@@ -117,8 +116,8 @@ def _shared_pages(bp, folder):
         user = require_roles(roles)
         if user["role"] == "captain":
             return redirect(url_for("captain.notifications"))
-        return render_page(layout, "notifications", "Notifications", "Announcement preferences and your notification list.",
-                           "settings", ["settings.js", "notifications.js"], settings_role=layout, section="notifications")
+        return render_page(layout, "notifications", "Notifications", "Announcements, request updates and alerts for you.",
+                           "settings", ["settings.js", "notifications.js"], settings_role=layout, section="inbox")
 
     @bp.get("/settings")
     def settings():
@@ -164,8 +163,8 @@ def register_pages(app):
     @captain.get("/notifications")
     def notifications():
         require_role("captain")
-        return render_page("captain", "notifications", "Notifications", "Announcement preferences and your notification list.",
-                           "settings", ["settings.js", "notifications.js"], settings_role="admin", section="notifications")
+        return render_page("captain", "notifications", "Notifications", "Announcements, request updates and alerts for you.",
+                           "settings", ["settings.js", "notifications.js"], settings_role="admin", section="inbox")
 
     # ---------------------------------------------------------------- resident
     @resident.get("/dashboard")
@@ -203,8 +202,8 @@ def register_pages(app):
     def notifications():
         require_role("resident")
         return render_page("resident", "notifications", "Notifications",
-                           "Announcement and request-status preferences, and your notification list.",
-                           "settings", ["settings.js", "notifications.js"], settings_role="resident", section="notifications")
+                           "Your notifications about announcements and your requests.",
+                           "settings", ["settings.js", "notifications.js"], settings_role="resident", section="inbox")
 
     @resident.get("/settings")
     def settings():

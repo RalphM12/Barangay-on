@@ -76,6 +76,7 @@ def settings_sections(user=None) -> list:
     items = [
         ("general", "🧭", "General", url_for(ep, section="general")),
         ("appearance", "🎨", "Appearance", url_for(ep, section="appearance")),
+        ("notifications", "🔔", "Notifications", url_for(ep, section="notifications")),
         ("account", "🔐", "Account & Security", url_for(ep, section="account")),
         ("privacy", "🛡️", "Privacy & Help", url_for(ep, section="privacy")),
     ]
