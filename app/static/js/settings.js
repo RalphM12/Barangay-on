@@ -1,5 +1,5 @@
 // Settings pages (all roles): load / save / cancel / reset, live preview of appearance.
-// Talks to /api/settings. The server validates every value again, so nothing here is trusted.
+// Talks to api/settings.php. The server validates every value again, so nothing here is trusted.
 (function () {
   var app = $('#setApp');
   if (!app) return;

@@ -1,4 +1,4 @@
-// Resident dashboard: loads data from /api/resident_dashboard
+// Resident dashboard: loads data from api/resident_dashboard.php
 (async function () {
   try {
     var d = await getJson(document.body.dataset.api);

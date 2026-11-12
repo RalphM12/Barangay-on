@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """One command to get Barangay-On running with MySQL:
 
-    python main.py --demo      check MySQL -> create database + tables -> load DEMO data and demo logins (your own computer only)
-    python main.py             same, but NO demo data: set ADMIN_USERNAME / ADMIN_PASSWORD to create the first administrator
-    python main.py --sqlite    skip MySQL and use a local SQLite file (testing only, includes demo data)
-    python main.py --reset     ERASE everything and reload the demo data
-    python main.py --port 5050
+    python start.py            check MySQL -> create database + tables -> load demo data (first time only) -> start the site
+    python start.py --sqlite   skip MySQL and use a local SQLite file (testing only)
+    python start.py --reset    ERASE everything and reload the demo data
+    python start.py --port 5050
 
 Edit the DB_* lines in the .env file next to this script if your MySQL user / password / port differ.
 """
@@ -16,12 +15,8 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--sqlite", action="store_true", help="use SQLite instead of MySQL")
 parser.add_argument("--reset", action="store_true", help="erase all data and reload the demo data")
-parser.add_argument("--demo", action="store_true", help="load demo data and allow the demo logins (local testing only)")
 parser.add_argument("--port", type=int, default=5000)
 args = parser.parse_args()
-
-if args.demo or args.sqlite or args.reset:
-    os.environ["ALLOW_DEMO_LOGINS"] = "1"  # demo accounts can only log in when you asked for demo mode
 
 if args.sqlite:
     for k in ("DATABASE_URL", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"):
@@ -49,11 +44,9 @@ def explain(exc):
      * XAMPP / MAMP:     open the app and press Start next to MySQL
      * Docker:           docker compose up -d     (uses docker-compose.yml in this folder)
      * MAMP uses port 8889: set DB_PORT=8889 and DB_PASSWORD=root in .env
-     No MySQL yet? Test right now with:  python main.py --sqlite""")
-    elif "1044" in t:
-        print("\n  -> This MySQL user may not use that database. Check DB_NAME and that the user has access to it.")
+     No MySQL yet? Test right now with:  python start.py --sqlite""")
     elif "1045" in t or "Access denied" in t:
-        print("\n  -> Wrong MySQL user or password. Check DB_USERNAME / DB_PASSWORD (or DB_USER) on the host or in .env.")
+        print("\n  -> Wrong MySQL user or password. Fix DB_USER / DB_PASSWORD in the .env file.")
     elif "pymysql" in t.lower() and "No module" in t:
         print("\n  -> Run:  pip install -r requirements.txt")
     sys.exit(1)
@@ -63,17 +56,10 @@ print(f"\nBarangay-On   database: {url.drivername.split('+')[0]}"
       + (f"  {url.host}:{url.port or 3306}  /  {url.database}  (user {url.username})" if is_mysql else "  (local file)"))
 
 if is_mysql:
-    try:
-        # Hosted databases (Wasmer, ...) give you a ready-made database and a user that may NOT create databases,
-        # so connect to that database directly first. Only create it when it really is missing (local MySQL).
-        try:
-            create_engine(url).connect().close()
-        except Exception as first:
-            if "1049" not in str(first) and "Unknown database" not in str(first):
-                raise
-            server = create_engine(url.set(database="mysql"))
-            with server.begin() as conn:
-                conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{url.database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
+    try:  # connect to the server first, create the database if it is missing
+        server = create_engine(url.set(database="mysql"))
+        with server.begin() as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{url.database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
         print("  connected to MySQL, database is ready")
     except Exception as exc:
         explain(exc)
@@ -91,12 +77,9 @@ with app.app_context():
         added = upgrade_schema()  # also upgrades tables left by the older PHP version
         if added:
             print("  database upgraded, added columns: " + ", ".join(added))
-        empty = not db.session.scalar(select(User.id).limit(1))
-        if args.reset or (empty and app.config["ALLOW_DEMO_LOGINS"]):
+        if args.reset or not db.session.scalar(select(User.id).limit(1)):
             load_sample_data()
-            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password   (LOCAL TESTING ONLY)")
-        elif empty:
-            print("  database is empty and no demo data was loaded. Set ADMIN_USERNAME and ADMIN_PASSWORD to create the first administrator.")
+            print("  demo data loaded.  Logins: admin / staff / captain / resident   password: password")
         else:
             print("  tables OK, existing data kept")
     except Exception as exc:

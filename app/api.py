@@ -19,7 +19,7 @@ from . import workflow
 from .core import (
     PERMISSIONS, SETTING_CHOICES, SETTING_DEFAULTS, SETTING_GROUPS, ROLE_LABELS, ApiError, add_notification,
     avatar_dir, avatar_url, captain_signature, csrf_check, full_name_expr, get_user_settings, has_permission,
-    hash_password, password_problem, latest_notifications, log_activity, next_tracking_no, notify_role, notify_staff, page_args,
+    hash_password, latest_notifications, log_activity, next_tracking_no, notify_role, notify_staff, page_args,
     parse_date, reg_no, require_full_access, require_permission, require_role, require_roles, require_staff, rows,
     squash, store_settings, unread_count, valid_date, verify_password,
 )
@@ -566,9 +566,8 @@ def users():
                 raise ApiError("Username must be 3-50 letters, numbers, dot, dash or underscore.", 422)
             if name == "" or len(name) > 100 or len(position) > 80:
                 raise ApiError("Please enter the full name (100 characters max).", 422)
-            _weak = password_problem(password)
-            if _weak:
-                raise ApiError(_weak, 422)
+            if len(password) < 8:
+                raise ApiError("Password must be at least 8 characters.", 422)
             if db.session.scalar(select(func.count()).select_from(User).where(User.username == username)):
                 raise ApiError("That username is already taken.", 409)
             position = position or ("Administrator" if role == "admin" else "Barangay Staff")
@@ -588,9 +587,8 @@ def users():
                 raise ApiError("Username must be 3-50 letters, numbers, dot, dash or underscore.", 422)
             if name == "" or len(name) > 100:
                 raise ApiError("Please enter the full name of the new captain (100 characters max).", 422)
-            _weak = password_problem(password)
-            if _weak:
-                raise ApiError(_weak, 422)
+            if len(password) < 8:
+                raise ApiError("Password must be at least 8 characters.", 422)
             if db.session.scalar(select(func.count()).select_from(User).where(User.username == username)):
                 raise ApiError("That username is already taken.", 409)
             # the new captain takes over: the serving captain's term ends now (the account is kept for the records)
@@ -757,9 +755,8 @@ def account():
             from .core import password_hash_of
             if not verify_password(current, password_hash_of(uid)):
                 raise ApiError("Your current password is not correct.", 422)
-            _weak = password_problem(new)
-            if _weak:
-                raise ApiError(_weak, 422)
+            if len(new) < 8:
+                raise ApiError("The new password must be at least 8 characters.", 422)
             if new != confirm:
                 raise ApiError("The new passwords do not match.", 422)
             db.session.execute(update(User).where(User.id == uid).values(password_hash=hash_password(new)))
@@ -801,9 +798,8 @@ def _new_resident_login(admin, first, last, username, password):
         raise ApiError("To create an account, enter both a username and a password.", 422)
     if not re.fullmatch(r"[A-Za-z0-9._]{4,30}", username):
         raise ApiError("Username: use 4 to 30 letters, numbers, dots or underscores.", 422)
-    _weak = password_problem(password)
-    if _weak:
-        raise ApiError(_weak, 422)
+    if len(password) < 8:
+        raise ApiError("Password must be at least 8 characters.", 422)
     if db.session.scalar(select(func.count()).select_from(User).where(User.username == username)):
         raise ApiError("That username is already taken. Try another one.", 409)
     u = User(username=username, password_hash=hash_password(password), full_name=f"{first} {last}",
@@ -906,9 +902,8 @@ def residents():
             if new_pass != "":
                 if user["role"] != "admin":
                     raise ApiError("Only the administrator can change a resident password.", 403)
-                _weak = password_problem(new_pass)
-                if _weak:
-                    raise ApiError(_weak, 422)
+                if len(new_pass) < 8:
+                    raise ApiError("Password must be at least 8 characters.", 422)
                 if not acc:
                     raise ApiError("This resident has no online account.", 422)
                 acc.password_hash = hash_password(new_pass)
@@ -1006,9 +1001,8 @@ def resident_accounts():
         if request.form.get("action", "") != "reset_password":
             raise ApiError("Unknown action", 400)
         uid, password = request.form.get("id", 0, type=int) or 0, request.form.get("password", "")
-        _weak = password_problem(password)
-        if _weak:
-            raise ApiError(_weak, 422)
+        if len(password) < 8:
+            raise ApiError("Password must be at least 8 characters.", 422)
         row = db.session.execute(select(User).where(User.id == uid, User.role == "resident")).scalar()
         if not row:
             raise ApiError("Resident account not found.", 404)
@@ -1281,8 +1275,6 @@ def certificate_pdf(tx_id):
     t = db.session.get(Transaction, tx_id)
     if not t or t.service.category != "document":
         raise ApiError("Document not found.", 404)
-    if t.status not in ("Approved", "Released") or not t.signed_at:
-        raise ApiError("This document can only be printed after it is approved and signed by the Captain.", 409)
     res = t.resident
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
@@ -1300,14 +1292,12 @@ def certificate_pdf(tx_id):
     y -= 18
     c.drawString(60, y, "is a resident of this barangay and has requested this document.")
     y -= 36
-    from reportlab.lib.utils import simpleSplit
     for line in (t.details or "").splitlines():
-        for part in simpleSplit(line, "Helvetica", 12, w - 140) or [""]:   # long lines wrap instead of being cut off
-            c.drawString(70, y, part)
-            y -= 16
+        c.drawString(70, y, line[:95])
+        y -= 16
     y -= 20
     c.drawString(60, y, f"Reference No.: {t.tracking_no}")
-    c.drawString(60, y - 16, f"Date issued: {t.signed_at:%B %d, %Y}")   # the signing date, so reprinting never changes it
+    c.drawString(60, y - 16, f"Date issued: {date.today():%B %d, %Y}")
     if t.signed_at:
         sig = t.signature_snapshot or captain_signature(int(t.signed_by or 0))
         try:

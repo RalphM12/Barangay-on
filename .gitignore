@@ -1,22 +1,3 @@
-# secrets and local settings
-.env
-.env.*
-!.env.example
-
-# python
-__pycache__/
-*.pyc
-venv/
-.venv/
-.pytest_cache/
-
-# local database and uploads (real user data must never be committed)
 instance/
-app/static/uploads/*
-!app/static/uploads/.gitkeep
-
-# operating system / editor / archives
-.DS_Store
-*.zip
-.idea/
-.vscode/
+__pycache__/
+.env
