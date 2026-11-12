@@ -500,11 +500,11 @@ def db_error_hint(exc: Exception) -> str:
     if "2003" in text or "Connection refused" in text or "Can't connect" in text:
         return "MySQL is not running (or the host/port in .env is wrong). Start MySQL, then try again."
     if "1045" in text or "Access denied" in text:
-        return "MySQL refused the username or password in .env (DB_USER / DB_PASSWORD)."
+        return "MySQL refused the username or password (DB_USERNAME / DB_PASSWORD)."
     if "1049" in text or "Unknown database" in text:
-        return "The database does not exist yet. Run: python start.py"
+        return "The database does not exist yet. Run: python main.py"
     if "doesn't exist" in text or "no such table" in text.lower() or "1146" in text:
-        return "The database tables do not exist yet. Run: python start.py"
+        return "The database tables do not exist yet. Run: python main.py"
     return "Database error: " + text.splitlines()[0][:140]
 
 
