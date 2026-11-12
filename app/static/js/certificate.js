@@ -336,7 +336,7 @@
     if (own) {
       // editable: staff can click any blank line to type or correct it before printing
       if (editable) body = body.replace(/class="f2v/g, 'contenteditable="true" spellcheck="false" class="f2v').replace(/class="f2chk"/g, 'class="f2chk" role="checkbox" tabindex="0"');
-      return '<div class="cert cert2' + (editable ? ' cert-edit' : '') + '" id="certSheet">' + body + '</div>';
+      return '<div class="cert cert2' + (editable ? ' cert-edit' : '') + '" id="certSheet"><div class="c2in">' + body + '</div></div>';
     }
     return '<div class="cert" id="certSheet"><div class="cframe">' + (CONFIG.demo ? '<div class="cwm" aria-hidden="true">SAMPLE - DEMO ONLY</div>' : '') + body + '</div></div>';
   }

@@ -887,7 +887,9 @@ html body .modal-back .modal:has(.view-split) { max-width: min(1400px, 97vw); }
    Full A4 page, no frame. Sized in container units (--u = 1% of the page width) so the preview and the
    printed page look the same.
    ===================================================================================================== */
-.cert.cert2 { aspect-ratio: 210 / 297; background: #fff; color: #111; font-family: "Century Gothic", "Segoe UI", "Helvetica Neue", Arial, sans-serif; font-size: calc(var(--u) * 1.9); line-height: 1.3; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+/* the .cert element is the size container, so its own font-size must not use container units: everything is set on the inner box */
+.cert.cert2 { aspect-ratio: 210 / 297; background: #fff; color: #111; overflow: hidden; position: relative; }
+.cert2 > .c2in { height: 100%; display: flex; flex-direction: column; font-family: "Century Gothic", "Segoe UI", "Helvetica Neue", Arial, sans-serif; font-size: calc(var(--u) * 1.9); line-height: 1.3; }
 .cert2 .h2 { position: relative; flex: none; }
 .cert2 .h2-banner { display: block; width: 61.7%; height: auto; }
 .cert2 .h2-text { position: absolute; left: 62.6%; top: 4.2%; right: 2%; display: flex; flex-direction: column; font-size: calc(var(--u) * 1.75); line-height: 1.42; }
