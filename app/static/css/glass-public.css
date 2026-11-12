@@ -224,7 +224,8 @@ body.gp .btn.loading::after {
 body.gp .split { gap: clamp(16px, 2.6vw, 36px); padding: 22px clamp(12px, 2.4vw, 32px) 8px; align-items: stretch; }
 body.gp .split-left {
   border: 1px solid rgba(255, 255, 255, .20); border-radius: 36px; justify-content: flex-start; isolation: isolate;
-  background: linear-gradient(155deg, rgba(38, 66, 128, .86), rgba(15, 31, 61, .84) 70%);
+  /* barangay hall photo behind a navy tint (keeps the white text readable) */
+  background: linear-gradient(155deg, rgba(38, 66, 128, .74), rgba(15, 31, 61, .88) 70%), url("../img/login-bg.jpg") center 30% / cover no-repeat;
   -webkit-backdrop-filter: var(--blur-strong); backdrop-filter: var(--blur-strong);
   box-shadow: var(--shadow-lift), inset 0 1px 0 rgba(255, 255, 255, .28);
   animation: gp-rise 1s var(--ease) .1s backwards;
