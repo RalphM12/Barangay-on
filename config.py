@@ -28,17 +28,22 @@ def _database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
     if url:
         return url
-    if os.environ.get("DB_USER"):
+    user = os.environ.get("DB_USERNAME") or os.environ.get("DB_USER")   # Wasmer provides DB_USERNAME
+    if user:
         from sqlalchemy.engine import URL
         return URL.create(
             "mysql+pymysql",
-            username=os.environ["DB_USER"],
+            username=user,
             password=os.environ.get("DB_PASSWORD", ""),
             host=os.environ.get("DB_HOST", "127.0.0.1"),
             port=int(os.environ.get("DB_PORT", "3306")),
             database=os.environ.get("DB_NAME", "barangay_on"),
             query={"charset": "utf8mb4"},
         ).render_as_string(hide_password=False)
+    if PRODUCTION and os.environ.get("ALLOW_SQLITE", "0") != "1":
+        # a SQLite file on a host such as Wasmer is wiped on restart: accounts and requests would vanish
+        raise RuntimeError("No database settings found (DATABASE_URL, or DB_HOST / DB_USERNAME / DB_PASSWORD / DB_NAME). "
+                           "Enable the database in your host so data is saved permanently.")
     return f"sqlite:///{INSTANCE_DIR / 'barangay_on.db'}"
 
 
