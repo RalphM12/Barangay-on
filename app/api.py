@@ -327,7 +327,8 @@ def transactions():
             "released_by": releaser.full_name if releaser else None,
             "approved_by_position": approver.position if approver else None,
             "captain_name": captain,
-            "resident": f"{res.first_name} {res.last_name}", "address": res.address, "contact_no": res.contact_no,
+            "resident": f"{res.first_name} {res.last_name}", "first_name": res.first_name, "last_name": res.last_name,
+            "address": res.address, "contact_no": res.contact_no,
             "birthdate": res.birthdate.strftime("%Y-%m-%d") if res.birthdate else None, "civil_status": res.civil_status, "sex": res.sex,
             "signature": signature,
         }

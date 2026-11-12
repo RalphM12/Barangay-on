@@ -11,8 +11,11 @@
     // Sample signature of the Punong Barangay. It is placed on the document AUTOMATICALLY once the Captain presses
     // "Sign" (the request then has a signed_at date). To use the real signature, replace this value with the URL
     // or data URI of a transparent PNG / SVG of the Captain's signature.
-    signature: "data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 240 90%22%3E%3Cg fill=%22none%22 stroke=%22%231b3a8f%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M14 62C26 30 40 14 48 16C56 18 40 54 34 68C30 76 40 70 52 52C58 42 64 40 62 48C60 56 62 60 70 52C76 46 80 44 80 50C80 56 86 56 94 46%22/%3E%3Cpath d=%22M98 52C104 40 108 36 108 44C108 52 114 54 122 42C128 34 132 36 130 46C128 56 138 56 150 40%22/%3E%3Cpath d=%22M152 44C164 30 176 26 176 34C176 44 160 56 164 62C168 68 190 50 206 36%22/%3E%3Cpath d=%22M20 74C70 66 140 70 224 62%22 stroke-width=%222%22/%3E%3C/g%3E%3C/svg%3E",
-    demo: true,                          // true = "SAMPLE - DEMO ONLY" watermark and footer; set false for real use
+    signature: '/static/img/cert/signature.png',
+    demo: false,                         // true = "SAMPLE - DEMO ONLY" watermark and footer; false = real forms
+    assets: '/static/img/cert/',         // header banner, QR codes, icons taken from the barangay's Word templates
+    email: 'stoninobaliwagcity@gmail.com',
+    facebook: 'Barangay Sto.Niño',
     clearanceMonths: 6,                  // Barangay Clearance validity
     indigencyMonths: 3,                  // Certificate of Indigency validity
     residencyMonths: 6,                  // Certificate of Residency validity
@@ -109,7 +112,13 @@
     var app = pick(v, ['application type']);
     var birth = parseDate(pick(v, ['date of birth']) || t.birthdate);
     var civil = pick(v, ['civil status']) || t.civil_status || '';
+    var full = (pick(v, ['full name', 'name', "owner's name", 'owner name']) || t.resident || '').trim();
+    var parts = full.split(/\s+/);
+    var first = t.first_name || pick(v, ['first name']) || parts.slice(0, Math.max(1, parts.length - 1)).join(' ');
+    var last = t.last_name || pick(v, ['last name']) || (parts.length > 1 ? parts[parts.length - 1] : '');
     return {
+      first: first.toUpperCase(), middle: pick(v, ['middle name']).toUpperCase(), last: last.toUpperCase(),
+      captainName: t.signed_by || t.captain_name || '',
       now: now,
       name: (pick(v, ['full name', 'name', "owner's name", 'owner name']) || t.resident || '').toUpperCase(),
       address: pick(v, ['complete address', 'complete residential address', 'business address', 'address']) || t.address || '',
@@ -175,54 +184,96 @@
     }).join('') + '</div>';
   }
 
+  /* ---------- the barangay's own Word templates (Clearance, Indigency, Residency) ---------- */
+  function asset(f) { return CONFIG.assets + f; }
+
+  function head2() {
+    return '<div class="h2"><img class="h2-banner" src="' + asset('banner.png') + '" alt="">' +
+      '<div class="h2-text"><b>Republic of the Philippines</b><b>Province of ' + esc(CONFIG.province) + '</b><b>City of Baliwag</b><b>Barangay Sto.Niño</b></div>' +
+      '<div class="h2-office">Office of the Punong Barangay</div></div>';
+  }
+
+  function foot2() {
+    return '<div class="f2"><span><img src="' + asset('gmail.png') + '" alt=""><u>' + esc(CONFIG.email) + '</u></span>' +
+      '<span><img src="' + asset('facebook.png') + '" alt="">' + esc(CONFIG.facebook) + '</span></div>';
+  }
+
+  // "LABEL: value" with the value on a line, like the blanks of the Word form
+  function f2(label, value, wide) { return '<div class="f2row"><b>' + label + ':</b> <span class="f2v' + (wide ? ' f2w' : '') + '">' + (value ? esc(value) : '&nbsp;') + '</span></div>'; }
+
+  function address2(c, suffix) {
+    var a = String(c.address || '').trim();
+    var has = /sto\.?\s*ni[ñn]o/i.test(a);
+    return '<div class="f2row"><b>ADDRESS:</b> <span class="f2v' + (has ? ' f2w' : '') + '">' + (a ? esc(has ? a.toUpperCase() : a) : '&nbsp;') + '</span>' + (has ? '' : ' ' + suffix) + '</div>';
+  }
+
+  function nameRows(c) { return f2('FIRST NAME', c.first) + f2('MIDDLE NAME', c.middle) + f2('LAST NAME', c.last); }
+
+  // "this ____ day of ________ 2026": the day the Captain signed (so printing again never changes the date)
+  function dayOf(c) {
+    var d = c.signedOn || c.now;
+    return '<span class="f2v f2s">' + ordinal(d.getDate()) + '</span> day of <span class="f2v f2m">' + MONTHS[d.getMonth()] + '</span> <b class="f2y">' + d.getFullYear() + '</b>';
+  }
+
+  function certifier(c) {
+    var sig = c.signed ? '<img class="f2sig" src="' + (c.signature || CONFIG.signature) + '" alt="Signature of the Punong Barangay"' + (c.signedOn ? ' title="Signed on ' + longDate(c.signedOn) + '"' : '') + '>'
+                       : '<span class="f2sigwait">Signature appears here once the Captain signs</span>';
+    return '<div class="f2cert"><span>Certified By:</span><div class="f2sigbox">' + sig + '</div>' +
+      '<div class="f2cap">' + (c.captainName ? esc(toTitle(c.captainName)) : '&nbsp;') + '</div><b>PUNONG BARANGAY</b></div>';
+  }
+
+  function applicant() { return '<div class="f2app"><div class="f2line"></div><span>Name and Signature of Applicant</span></div>'; }
+  function thumbs() { return '<div class="f2thumbs"><div><span>Left<br>Thumbmark</span></div><div><span>Right<br>Thumbmark</span></div></div>'; }
+  function valid2(kind, months) {
+    return '<div class="f2note">This ' + kind + ' is valid for <i>' + months + ' months</i> from date of first issue. The Barangay reserves the right to revoke or cancel this certificate for any false statement or information given by the applicant.</div>';
+  }
+
   /* ---------- Barangay Clearance ---------- */
   function clearance(c) {
-    var valid = addMonths(c.now, CONFIG.clearanceMonths);
-    return barangayHeader() + '<h2 class="cname">BARANGAY CLEARANCE</h2>' +
-      '<div class="ctop">' + '<div>' + meta(c, valid) + '<div class="cwhom">TO WHOM IT MAY CONCERN:</div></div>' +
-      '<div class="cphoto"><span>1x1 / 2x2 PHOTO</span></div></div>' +
-      '<div class="cbody">' +
-        '<p class="ind">This is to certify that ' + whoLine(c) + ', and a bonafide resident of <b>' + val(c.address) + '</b>, has been found to have <b>no derogatory record</b> on file in this barangay as of this date.</p>' +
-        '<p class="ind">This clearance is issued upon the request of the above-named person for <b>' + val(purposeText(c.purpose, true)) + '</b>.</p>' +
-        issued(c) +
-        detailsTable([
-          ['Full Name', c.name ? toTitle(c.name) : '', 'Purpose', c.purpose],
-          ['Date of Birth', longDate(c.birth), 'CTC No.', ''],
-          ['Place of Birth', '', 'OR No.', ''],
-          ['Civil Status', c.civil, 'Amount Paid', ''],
-          ['Citizenship', 'Filipino', '', '']
-        ]) +
-      '</div>' +
-      '<div class="csign"><div class="cres"><div class="cline"></div><em>Resident\'s Signature</em><div class="cthumb"><span>R. Thumb</span></div></div>' +
-        seal() + certifiedBy(c) + '</div>' + footer('(Not valid without official dry seal)');
+    return head2() + '<h2 class="f2title">BARANGAY CLEARANCE</h2>' +
+      '<div class="f2body"><p>To Whom it may concern:</p>' +
+      '<p>This is to certify that the person whose name and details appear hereon has requested a CLEARANCE from this office and the results is/are listed below:</p>' +
+      '<div class="f2fields">' + nameRows(c) + address2(c, 'BARANGAY STO.NIÑO BALIWAG CITY BULACAN') + f2('AGE', c.age === '' ? '' : String(c.age)) +
+        f2('DATE OF BIRTH', c.birth ? longDate(c.birth) : '') + '<div class="f2row"><b>REMARKS:</b> <b class="f2rem">NO DEROGATORY RECORD</b></div>' + f2('PURPOSE', purposeText(c.purpose, false), true) + '</div>' +
+      '<p class="f2gap">This certification is issued on this ' + dayOf(c) + ' at Barangay Sto.Niño Baliwag City, Bulacan.</p>' +
+      '<div class="f2fields f2ctc">' + f2('Com. Tax Cert. No.', '') + f2('Issued on', '') + '</div></div>' +
+      '<div class="f2sign">' + '<div class="f2left">' + applicant() + thumbs() + '</div>' + certifier(c) + '</div>' +
+      '<div class="f2bottom"><img class="f2qr" src="' + asset('qr-clearance.png') + '" alt="QR code">' + valid2('Clearance', CONFIG.clearanceMonths) +
+        '<b class="f2nv">NOT VALID WITHOUT OFFICIAL DRY SEAL</b></div>' + foot2();
   }
 
   /* ---------- Certificate of Indigency ---------- */
+  var INDIGENCY_PURPOSES = [
+    ['Medical Assistance', /medical|medicine|hospital/i], ['Financial Assistance', /financ|cash|aid/i], ['Anti-Rabies Vaccination', /rabies|vaccin/i],
+    ['Legal Services', /legal|lawyer|court/i], ['Scholarship at Tulong sa Edukasyon', /scholar|tulong|educ|school/i], ['Death Burial', /burial|death|funeral/i]
+  ];
+
   function indigency(c) {
-    var valid = addMonths(c.now, CONFIG.indigencyMonths);
-    return barangayHeader() + '<h2 class="cname">CERTIFICATE OF INDIGENCY</h2>' + meta(c, valid) +
-      '<div class="cbody"><div class="cwhom">TO WHOM IT MAY CONCERN:</div>' +
-        '<p class="ind">This is to certify that ' + whoLine(c) + ', and a bonafide resident of <b>' + val(c.address) + '</b>, belongs to the <b>indigent families</b> of this barangay.</p>' +
-        '<p class="ind">Based on the records and personal knowledge of this office, the above-named person has no regular source of income and is unable to meet the basic needs of the family.</p>' +
-        '<p class="ind">This certification is issued upon the request of the above-named person for <b>' + val(purposeText(c.purpose, false)) + '</b> and for whatever legal purpose it may serve.</p>' +
-        issued(c) + '</div>' +
-      '<div class="csign"><div class="cres"><div class="cline"></div><em>Signature of Requesting Party</em>' +
-        '<div class="cnos"><div>CTC No.: <span class="blank">&nbsp;</span></div><div>OR No.: <span class="blank">&nbsp;</span></div></div></div>' +
-        seal() + certifiedBy(c) + '</div>' + footer('(Not valid without official dry seal)');
+    var p = String(c.purpose || ''), hit = -1;
+    INDIGENCY_PURPOSES.forEach(function (o, i) { if (hit < 0 && o[1].test(p)) hit = i; });
+    var rows = INDIGENCY_PURPOSES.map(function (o, i) { return '<div>(' + (i === hit ? '&#10003;' : '&nbsp;&nbsp;') + ') ' + o[0] + '</div>'; }).join('') +
+      '<div>(' + (hit < 0 && p ? '&#10003;' : '&nbsp;&nbsp;') + ') Others (specify): <span class="f2v f2w">' + (hit < 0 && p ? esc(p) : '&nbsp;') + '</span></div>';
+    return head2() + '<h2 class="f2title">CERTIFICATE OF INDIGENCY</h2>' +
+      '<div class="f2body"><p>TO WHOM IT MAY CONCERN:</p>' +
+      '<p>This is to certify that the person whose name and details appear hereon is a <b>bona fide resident</b> of this barangay and belongs to an <b>INDIGENT FAMILY</b> and <b>low-income</b> families/resident of this Barangay.</p>' +
+      '<div class="f2fields">' + nameRows(c) + address2(c, 'BARANGAY STO.NIÑO BALIWAG CITY BULACAN') + f2('AGE', c.age === '' ? '' : String(c.age)) + f2('DATE OF BIRTH', c.birth ? longDate(c.birth) : '') + '</div>' +
+      '<div class="f2purp"><div>This CERTIFICATION is upon request of the above-named person for:</div>' + rows + '</div>' +
+      '<p class="f2gap f2just">Signed and issued on this ' + dayOf(c) + ' at Barangay Sto.Niño Baliwag City Bulacan</p></div>' +
+      '<div class="f2sign f2sign-ind">' + '<div class="f2left">' + applicant() + '</div>' + certifier(c) + '</div>' +
+      '<div class="f2bottom f2bottom-ind"><img class="f2qr" src="' + asset('qr-indigency.png') + '" alt="QR code"><b class="f2nv">*NOT VALID WITHOUT OFFICIAL DRY SEAL</b></div>' + foot2();
   }
 
-  /* ---------- Certificate of Residency (same style as the two above) ---------- */
+  /* ---------- Certificate of Residency ---------- */
   function residency(c) {
-    var valid = addMonths(c.now, CONFIG.residencyMonths);
-    return barangayHeader() + '<h2 class="cname">CERTIFICATE OF RESIDENCY</h2>' + meta(c, valid) +
-      '<div class="cbody"><div class="cwhom">TO WHOM IT MAY CONCERN:</div>' +
-        '<p class="ind">This is to certify that ' + whoLine(c) + ', is a bonafide resident of <b>' + val(c.address) + '</b>' +
-          (c.since ? ', and has been residing in this barangay since <b>' + esc(c.since) + '</b>' : '') + '.</p>' +
-        '<p class="ind">This certification is issued upon the request of the above-named person for <b>' + val(purposeText(c.purpose, true)) + '</b> and for whatever legal purpose it may serve.</p>' +
-        issued(c) + '</div>' +
-      '<div class="csign"><div class="cres"><div class="cline"></div><em>Signature of Requesting Party</em>' +
-        '<div class="cnos"><div>CTC No.: <span class="blank">&nbsp;</span></div><div>OR No.: <span class="blank">&nbsp;</span></div></div></div>' +
-        seal() + certifiedBy(c) + '</div>' + footer('(Not valid without official dry seal)');
+    return head2() + '<h2 class="f2title">CERTIFICATE OF RESIDENCY</h2>' +
+      '<div class="f2body"><p>To Whom it may concern:</p>' +
+      '<p>This is to certify that the person whose name and details appear hereon is a bona fide resident of this barangay and has been residing at the stated address for at least six (6) months prior to the application of this certification.</p>' +
+      '<div class="f2fields">' + nameRows(c) + address2(c, 'BRGY. STO.NIÑO BALIWAG CITY BULACAN') + f2('DATE OF BIRTH', c.birth ? longDate(c.birth) : '') + f2('YEAR(S) OF RESIDENCY', c.since) + '</div>' +
+      '<p class="f2gap">This <b>CERTIFICATION</b> has been issued upon the request of <span class="f2v f2w2">' + (c.name ? esc(toTitle(c.name)) : '&nbsp;') + '</span> for whatever legal purpose it may serve.</p>' +
+      '<p class="f2just">Signed and issue this ' + dayOf(c) + ' at Barangay Hall of Sto.Niño Baliwag City Bulacan</p></div>' +
+      '<div class="f2sign">' + '<div class="f2left">' + applicant() + thumbs() + '</div>' + certifier(c) + '</div>' +
+      '<div class="f2bottom"><img class="f2qr" src="' + asset('qr-residency.png') + '" alt="QR code">' + valid2('RESIDENCY', CONFIG.residencyMonths) +
+        '<b class="f2nv">NOT VALID WITHOUT OFFICIAL DRY SEAL</b></div>' + foot2();
   }
 
   /* ---------- Barangay Business Permit (own layout: business information, assessment of fees, prepared / approved by) ---------- */
@@ -273,13 +324,14 @@
   }
 
   function certificateHtml(t) {
-    var c = collect(t), body;
+    var c = collect(t), body, own = true;
     switch (t.service) {
       case 'Certificate of Residency': body = residency(c); break;
       case 'Certificate of Indigency': body = indigency(c); break;
-      case 'Business Permit': case 'Business Permit Request': body = businessPermit(c); break;
+      case 'Business Permit': case 'Business Permit Request': body = businessPermit(c); own = false; break;
       default: body = clearance(c);       // Barangay Clearance and any other document
     }
+    if (own) return '<div class="cert cert2" id="certSheet">' + body + '</div>';
     return '<div class="cert" id="certSheet"><div class="cframe">' + (CONFIG.demo ? '<div class="cwm" aria-hidden="true">SAMPLE - DEMO ONLY</div>' : '') + body + '</div></div>';
   }
 
@@ -294,7 +346,7 @@
     root.innerHTML = sheet.outerHTML;
     var style = document.createElement('style');
     style.id = 'printPage';
-    style.textContent = '@page { size: A4 portrait; margin: 8mm; }';
+    style.textContent = sheet.classList.contains('cert2') ? '@page { size: A4 portrait; margin: 0; }' : '@page { size: A4 portrait; margin: 8mm; }';
     document.body.appendChild(style);
     document.body.appendChild(root);
     var cleanup = function () {
