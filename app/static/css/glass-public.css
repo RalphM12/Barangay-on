@@ -545,3 +545,11 @@ body.gp-home .hero-logo { display: block; width: min(420px, 78%); height: auto; 
 
 /* Photo slideshow: slightly stronger shade so the white hero text stays readable on bright photos */
 body.gp-home .hero-shade { background: linear-gradient(180deg, rgba(10, 20, 45, .34), rgba(10, 20, 45, .62)); }
+
+/* ---------------------------------------------------------------- login page: barangay hall photo as the background */
+body.gp-auth::before, body.gp-auth::after {
+  animation: none; transform: none; will-change: auto;
+  width: auto; height: auto; margin: 0; inset: 0; left: 0; top: 0;
+}
+body.gp-auth::before { background: url("../img/login-bg.jpg") center 35% / cover no-repeat; }
+body.gp-auth::after  { background: linear-gradient(180deg, rgba(8, 16, 38, .55), rgba(8, 16, 38, .72)); }
