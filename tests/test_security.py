@@ -96,6 +96,11 @@ def test_resident_cannot_open_admin_api(app, client):
 def test_production_refuses_to_start_without_secret_key(monkeypatch):
     import importlib
     import config
+    try:  # config.py reads your own .env file, which may contain a SECRET_KEY: ignore it for this test
+        import dotenv
+        monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: None)
+    except ImportError:
+        pass
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.delenv("SECRET_KEY", raising=False)
     with pytest.raises(RuntimeError):

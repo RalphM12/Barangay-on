@@ -1,0 +1,68 @@
+{# App shell shared by every logged-in page: <head>, sidebar, top bar, scripts.
+   Child templates set: role (admin|staff|captain|resident), css, active, title, and fill the blocks. #}
+{% macro sidebar(role, active) %}
+{% set me = current_user() %}
+{% set sub = 'Office of the Barangay Captain' if role == 'captain' else 'Barangay Online Services Portal' %}
+<style>.ui-ic{flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.9;vertical-align:middle}.sidebar a.active .ui-ic,.sidebar .nav-parent:hover .ui-ic{opacity:1}.sidebar .nav-sub em{display:inline-flex;align-items:center}</style>
+<aside class="sidebar" id="sidebar"><div class="brand"><div class="logo"><img src="{{ url_for('static', filename='img/brand/icon.png') }}" alt="" width="40" height="40"></div><div><h1>BARANGAY-ON</h1><p>{{ sub }}</p></div></div>
+{% if role in ('admin', 'staff') %}
+  {% set portal = {'admin': 'Admin Portal', 'captain': 'Captain Portal'}.get(me.role, 'Staff Portal') %}
+  <div class="portal">{{ portal }}</div>
+{% endif %}
+<nav>
+{% for key, icon, label, url, badge in nav_items(role) %}
+  {% if key == 'settings' %}
+    {% set items = settings_sections() %}
+    {% set cur = active[9:] if active.startswith('settings.') else '' %}
+    {% set is_open = cur != '' and cur in items|map(attribute=0)|list %}
+    <div class="nav-group{% if is_open %} open{% endif %}" data-nav-group>
+      <button type="button" class="nav-parent" id="navSettingsBtn" aria-expanded="{{ 'true' if is_open else 'false' }}" aria-controls="navSettings">
+        {{ ui_icon('⚙') }} <span>Settings</span><i class="chev" aria-hidden="true"></i></button>
+      <div class="nav-sub" id="navSettings" role="group" aria-labelledby="navSettingsBtn"><div class="nav-sub-inner">
+      {% for it in items %}
+        <a{% if it[0] == cur %} class="active" aria-current="page"{% endif %} href="{{ it[3] }}"><em aria-hidden="true">{{ ui_icon(it[1], 16) }}</em><span>{{ it[2] }}</span></a>
+      {% endfor %}
+      </div></div>
+    </div>
+  {% else %}
+    <a{% if key == active %} class="active"{% endif %} href="{{ url }}">{{ ui_icon(icon) }} <span>{{ label }}</span>
+      {%- if badge == 'approvals' %} <b class="pill" id="navApprovals" hidden>0</b>
+      {%- elif badge == 'unread' %} <b class="pill" data-unread hidden>0</b>{% endif %}</a>
+  {% endif %}
+{% endfor %}
+</nav><a class="logout" href="{{ url_for('public.logout') }}">{{ ui_icon('⎋') }} <span>Logout</span></a></aside><div class="sb-backdrop" id="sbBackdrop"></div>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html lang="en"{{ prefs_attrs() }}>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf" content="{{ csrf_token() }}">
+  <title>{{ title }} | Barangay-On</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/brand/icon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/brand/icon-180.png') }}">
+  {# Bootstrap 5 first; the barangay stylesheets after it refine it #}
+  <link rel="stylesheet" href="{{ static_v('vendor/bootstrap/bootstrap-lite.min.css') }}">
+  <link rel="stylesheet" href="{{ static_v('css/' ~ css ~ '.css') }}">
+  {% block extra_css %}{% endblock %}
+  <link rel="stylesheet" href="{{ static_v('css/shell.css') }}">
+  <link rel="stylesheet" href="{{ static_v('css/glass.css') }}">
+  {% block late_css %}{% endblock %}
+  <script>(function(){var d=document.documentElement,t=d.dataset.theme||"light";d.dataset.scheme=(t==="dark"||(t==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light";d.dataset.sidebar=(window.matchMedia("(max-width: 900px)").matches||d.dataset.sbpref==="collapsed")?"closed":"open";})();</script>
+</head>
+<body{% block body_attrs %}{% endblock %}>
+  {{ sidebar(role, active) }}
+  <div class="main">
+    {% block topbar %}{% endblock %}
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+  <script src="{{ static_v('js/common.js') }}"></script>
+  <script src="{{ static_v('js/shell.js') }}"></script>
+  <script src="{{ static_v('js/glass.js') }}"></script>
+  {% block scripts %}{% endblock %}
+  <script src="{{ static_v('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
