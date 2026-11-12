@@ -1,0 +1,5 @@
+kind: wasmer.io/App.v0
+name: barangay-on
+owner: ralphmartinstacruz
+package: wasmer/hello@^0.1.3
+app_id: da_K53IxtPUdp1Z

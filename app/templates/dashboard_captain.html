@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% from "macros.html" import menu_button %}
+{% from "components.html" import signature_card %}
+{% set css = 'captain' %}{% set role = 'captain' %}{% set active = 'dashboard' %}{% set title = 'Overview' %}
+{% block body_attrs %} data-settings-api="{{ url_for('api.settings') }}" data-api="{{ url_for('api.captain_dashboard') }}" data-action="{{ url_for('api.captain_action') }}" data-account="{{ url_for('api.account') }}" data-login="{{ url_for('public.login') }}"{% endblock %}
+{% block topbar %}
+<header class="topbar">
+      {{ menu_button() }}
+      <div class="tb-title">
+        <h2>Captain's Overview</h2>
+        <small id="today"></small>
+      </div>
+      <div class="right">
+        <a class="bell" href="notifications" title="Notifications">{{ ui_icon('🔔', 20) }}<b class="pill" data-unread hidden>0</b></a>
+        <a class="profile" href="{{ profile_url(user) }}" title="View my profile">
+          <div class="avatar">{{ ui_icon('👤', 20) }}</div>
+          <div>
+            <strong id="userName">{{ user.full_name }}</strong>
+            <small id="userRole">{{ user.position }}</small>
+          </div>
+        </a>
+      </div>
+    </header>
+{% endblock %}
+{% block content %}
+      <div id="errorBox" class="error" hidden></div>
+      <div id="toast" class="toast" hidden></div>
+
+      <div class="banner">
+        <h2 id="greeting">Good day!</h2>
+        <p>As Barangay Captain you sign the document requests that staff approved and sent to you. Every signed document goes back to staff, who release it to the resident (it is then listed under Transaction History as Released).</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat gold"><small>Waiting for Signature</small><strong id="stToSign">–</strong><span>Approved by staff</span></div>
+        <div class="stat"><small>Signed This Month</small><strong id="stMonth">–</strong><span>By you</span></div>
+        <div class="stat"><small>Signed in Total</small><strong id="stTotal">–</strong><span>By you</span></div>
+      </div>
+
+      <div class="grid">
+        <section class="card wide">
+          <h3>Documents Waiting for Your Signature</h3>
+          <div style="margin-bottom:10px"><button type="button" class="act approve" id="signSelected" disabled>Sign selected</button>
+            <a class="act" style="background:#eee;color:#1f2433" href="approvals">See all</a></div>
+          <table>
+            <thead><tr><th><input type="checkbox" id="pickAll" title="Select all"></th><th>Tracking No.</th><th>Document</th><th>Resident</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="approvalBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </section>
+
+        {{ signature_card() }}
+      </div>
+{% endblock %}
+{% block scripts %}<script src="{{ static_v('js/captain.js') }}"></script><script src="{{ static_v('js/signature.js') }}"></script>{% endblock %}
