@@ -61,7 +61,7 @@
       if (!on) return;
       var name=sel.options[sel.selectedIndex].text; $('#documentTitle').textContent=name;
       var p = meta.profile || {};
-      window.DocForms.render(dynamicFields, name, { name: p.name, address: p.address, contact: p.contact_no }, meta.today);
+      window.DocForms.render(dynamicFields, name, { name: p.name, address: p.address, contact: p.contact_no, birth: p.birthdate, civil: p.civil_status }, meta.today);
     }
     $('#svc').addEventListener('change',syncDoc);
     $('#newForm').addEventListener('reset',function(){setTimeout(syncDoc,0);});
