@@ -1,5 +1,5 @@
 // Captain dashboard: sign documents (the captain also has all permissions on the other pages).
-// Loads /api/captain_dashboard, sends signatures to /api/captain_action
+// Loads api/captain_dashboard.php, sends signatures to api/captain_action.php
 (function () {
   var body = document.body;
   var csrf = document.querySelector('meta[name="csrf"]').content;

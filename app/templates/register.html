@@ -95,7 +95,7 @@
             <div>
               <label for="password">Password</label>
               <div class="pw-wrap">
-                <input type="password" id="password" name="password" minlength="10" required{{ bad('password') }}>
+                <input type="password" id="password" name="password" minlength="8" required{{ bad('password') }}>
                 {{ eye_button() }}
               </div>
               {{ field_error('password') }}
@@ -103,18 +103,11 @@
             <div>
               <label for="confirm_password">Confirm password</label>
               <div class="pw-wrap">
-                <input type="password" id="confirm_password" name="confirm_password" minlength="10" required{{ bad('confirm_password') }}>
+                <input type="password" id="confirm_password" name="confirm_password" minlength="8" required{{ bad('confirm_password') }}>
                 {{ eye_button() }}
               </div>
               {{ field_error('confirm_password') }}
             </div>
-          </div>
-          <div class="privacy-consent">
-            <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500;line-height:1.4">
-              <input type="checkbox" name="privacy_consent" value="1" required style="margin-top:4px"{{ bad('privacy') }}>
-              <span>I agree that the barangay may collect and use my name, address, birthday and contact number to verify that I live here and to process my requests, as described in the Data Privacy Act of 2012 (RA 10173). My information is used only for barangay services and is not sold or shared for other purposes.</span>
-            </label>
-            {{ field_error('privacy') }}
           </div>
           <button type="submit" class="btn">Create Account</button>
         </form>

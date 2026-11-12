@@ -2,14 +2,13 @@
 import re
 from datetime import date, datetime, timedelta
 
-import hmac
 from flask import Blueprint, current_app, redirect, render_template, request, send_from_directory, session, url_for
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 
 from .core import (
     add_notification, avatar_dir, avatar_url, db_error_hint, csrf_token, current_user, hash_password, home_for, log_activity, notify_staff,
-    verify_password, ROLE_HOME, DEMO_PASSWORD_HASH, attempts_in_window, csrf_valid, clear_attempts, client_ip, password_problem, record_attempt,
+    verify_password, ROLE_HOME,
 )
 from .models import Announcement, Resident, Service, User, db, now
 from .nav import default_page_url
@@ -116,30 +115,19 @@ def login():
     error = "Your term as Barangay Captain has ended, so you were signed out. Please contact the administrator." if request.args.get("ended") else ""
     username = (request.args.get("u") or "").strip()
 
-    status = 200
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password", "")
-        ukey, ikey = "u:" + username.lower()[:100], "ip:" + client_ip()
-        if not csrf_valid(request.form.get("csrf", "")):
-            error = "Your session expired. Please try again."
-        elif username == "" or password == "":
+        if username == "" or password == "":
             error = "Please enter your username and password."
-        elif attempts_in_window("login", ukey, 15) >= 5 or attempts_in_window("login", ikey, 15) >= 30:
-            error, status = "Too many failed attempts. Please wait 15 minutes and try again.", 429
         else:
             try:
                 row = db.session.execute(select(User).where(User.username == username).limit(1)).scalar()
                 term_over = bool(row and row.term_ended_at and row.term_ended_at <= now())
-                # an unknown username still costs one password check, so the response time does not reveal it
-                good = verify_password(password, row.password_hash if row else DEMO_PASSWORD_HASH) and bool(row)
-                if good and row.password_hash == DEMO_PASSWORD_HASH and not current_app.config.get("ALLOW_DEMO_LOGINS"):
-                    good = False
-                    error = "This account still has the demo password, so it is switched off. Ask the administrator to set a new password."
+                good = bool(row and verify_password(password, row.password_hash))
                 if row and row.role == "captain" and term_over and good:
                     error = "Your term as Barangay Captain has ended, so this account can no longer sign in. Please contact the administrator."
                 elif good:
-                    clear_attempts("login", ukey)
                     session.clear()
                     session.permanent = False
                     session["user"] = {"id": row.id, "username": row.username, "full_name": row.full_name,
@@ -147,8 +135,7 @@ def login():
                     session["last_activity"] = int(datetime.now().timestamp())
                     log_activity("Login successful", f"You logged in from {request.remote_addr or 'unknown'}", session["user"])
                     return redirect(default_page_url(session["user"]))
-                record_attempt("login", ukey, ikey)
-                if row:
+                if row and error == "":
                     log_activity("Login failed", "Invalid password attempt",
                                  {"id": row.id, "username": row.username})
                 if error == "":
@@ -158,14 +145,11 @@ def login():
                 current_app.logger.exception("login failed")
                 error = db_error_hint(exc)
     return render_template("login.html", error=error, username=username, announcements=_latest_announcements(),
-                           registered=bool(request.args.get("registered")), csrf=csrf_token()), status
+                           registered=bool(request.args.get("registered")))
 
 
-@bp.route("/logout", methods=["GET", "POST"])
+@bp.get("/logout")
 def logout():
-    # A link on another website must not be able to log people out (cookies are sent on cross-site links).
-    if request.headers.get("Sec-Fetch-Site", "same-origin") == "cross-site":
-        return redirect(url_for("public.index"))
     if current_user():
         log_activity("Logout", "Logged out")
     session.clear()
@@ -195,7 +179,8 @@ def register():
         for k in old:
             old[k] = (request.form.get(k) or "").strip()
         password, confirm = request.form.get("password", ""), request.form.get("confirm_password", "")
-        if not csrf_valid(request.form.get("csrf", "")):
+        import hmac
+        if not hmac.compare_digest(session.get("csrf", "") or "", request.form.get("csrf", "")):
             errors["form"] = "Your session expired. Please try again."
         if old["first_name"] == "" or len(old["first_name"]) > 60:
             errors["first_name"] = "Enter your first name (up to 60 characters)."
@@ -220,15 +205,10 @@ def register():
             errors["contact_no"] = "Enter a valid contact number: digits only, up to 11 digits (e.g., 09171234567)."
         if not re.fullmatch(r"[A-Za-z0-9._]{4,30}", old["username"]):
             errors["username"] = "Use 4 to 30 letters, numbers, dots or underscores."
-        weak = password_problem(password, old["username"])
-        if weak:
-            errors["password"] = weak
+        if len(password) < 8:
+            errors["password"] = "Use at least 8 characters."
         elif password != confirm:
             errors["confirm_password"] = "The passwords do not match."
-        if request.form.get("privacy_consent") != "1":
-            errors["privacy"] = "Please read and accept the data privacy notice to register."
-        if attempts_in_window("register", "ip:" + client_ip(), 60) >= 5:
-            errors["form"] = "Too many registrations from this connection. Please try again in an hour."
 
         if not errors:
             try:
@@ -243,7 +223,6 @@ def register():
                 notify_staff("New resident registration", f"{full_name} registered online and is Waiting for Verification. Open Residents and click Verify This Resident to approve.", "info")
                 add_notification(u.id, "Welcome to Barangay-On", "Your registration is Waiting for Verification. You can request documents, file complaints and send community reports once the barangay office registers you.", "info")
                 db.session.commit()
-                record_attempt("register", "ip:" + client_ip())
                 return redirect(url_for("public.login", registered=1, u=old["username"]))
             except IntegrityError:
                 db.session.rollback()
