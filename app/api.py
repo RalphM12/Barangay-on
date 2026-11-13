@@ -1302,31 +1302,38 @@ def certificate_pdf(tx_id):
     c.drawCentredString(w / 2, h - 130, t.service.name.upper())
     c.setFont("Helvetica", 12)
     y = h - 190
+    from reportlab.lib.utils import simpleSplit
+    text_width = w - 120
+
+    def draw_wrapped(text, x, width, leading=16):
+        nonlocal y
+        for line in simpleSplit(text, "Helvetica", 12, width) or [""]:
+            c.drawString(x, y, line)
+            y -= leading
+
     c.drawString(60, y, "TO WHOM IT MAY CONCERN:")
     y -= 30
-    c.drawString(60, y, f"This certifies that {res.first_name} {res.last_name}, of {res.address or 'this barangay'},")
-    y -= 18
-    c.drawString(60, y, "is a resident of this barangay and has requested this document.")
-    y -= 36
-    from reportlab.lib.utils import simpleSplit
+    draw_wrapped(f"This certifies that {res.first_name} {res.last_name}, of {res.address or 'this barangay'},", 60, text_width)
+    draw_wrapped("is a resident of this barangay and has requested this document.", 60, text_width)
+    y -= 20
     for line in (t.details or "").splitlines():
-        for part in simpleSplit(line, "Helvetica", 12, w - 140) or [""]:   # long lines wrap instead of being cut off
-            c.drawString(70, y, part)
-            y -= 16
+        draw_wrapped(line, 70, w - 140)
     y -= 20
     c.drawString(60, y, f"Reference No.: {t.tracking_no}")
-    c.drawString(60, y - 16, f"Date issued: {t.signed_at:%B %d, %Y}")   # the signing date, so reprinting never changes it
-    if t.signed_at:
-        sig = t.signature_snapshot or captain_signature(int(t.signed_by or 0))
-        try:
-            if sig.startswith("data:image/png"):
-                c.drawImage(ImageReader(io.BytesIO(base64.b64decode(sig.split(",", 1)[1]))), w - 260, 140, width=180, height=60, mask="auto")
-        except Exception:
-            pass  # automatic (SVG) signatures appear in the browser print view
-        c.line(w - 270, 135, w - 60, 135)
-        c.drawCentredString(w - 165, 120, t.signed_by_name or "")
-        c.setFont("Helvetica", 9)
-        c.drawCentredString(w - 165, 107, "Punong Barangay")
+    c.drawString(60, y - 18, f"Date issued: {t.signed_at:%B %d, %Y}")  # signing date stays fixed when reprinted
+
+    sig = t.signature_snapshot or captain_signature(int(t.signed_by or 0))
+    sig_y = max(125, y - 70)
+    try:
+        if sig.startswith("data:image/png"):
+            c.drawImage(ImageReader(io.BytesIO(base64.b64decode(sig.split(",", 1)[1]))),
+                        w - 260, sig_y + 20, width=180, height=60, mask="auto")
+    except Exception:
+        pass  # automatic (SVG) signatures appear in the browser print view
+    c.line(w - 270, sig_y + 15, w - 60, sig_y + 15)
+    c.drawCentredString(w - 165, sig_y, t.signed_by_name or "")
+    c.setFont("Helvetica", 9)
+    c.drawCentredString(w - 165, sig_y - 13, "Punong Barangay")
     c.showPage()
     c.save()
     return Response(buf.getvalue(), mimetype="application/pdf",
