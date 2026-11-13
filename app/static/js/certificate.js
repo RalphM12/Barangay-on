@@ -367,11 +367,16 @@
   }
 
   // Read-only preview for residents: no Captain signature or name, a PREVIEW watermark, and no copy / print / save shortcuts
-  window.previewCertificate = function (t) {
+  window.previewCertificate = function (t, opts) {
     var t2 = Object.assign({}, t, { signed_at: null, signed_by: '', captain_name: '', signature: '', approved_by: '', approved_by_position: '' });
     var body = openModal('Preview: ' + t.service,
-      '<div class="cert-note">Preview only. This copy has no signature and cannot be copied or printed. Visit the Barangay Hall for the official signed document.</div>' +
-      '<div class="cert-preview" id="certPreview">' + certificateHtml(t2, false) + '<div class="cert-preview-wm" aria-hidden="true">PREVIEW ONLY<br>NOT AN OFFICIAL DOCUMENT</div></div>');
+      '<div class="cert-note">' + (opts && opts.submit ? 'Please review your document. Go back to the form to change anything, or submit it.' : 'Preview only. This copy has no signature and cannot be copied or printed. Visit the Barangay Hall for the official signed document.') + '</div>' +
+      '<div class="cert-preview" id="certPreview">' + certificateHtml(t2, false) + '<div class="cert-preview-wm" aria-hidden="true">PREVIEW ONLY<br>NOT AN OFFICIAL DOCUMENT</div></div>' +
+      (opts && opts.submit ? '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px"><button type="button" class="btn-sm" id="pvBack">Back to edit</button><button type="button" class="btn-primary" id="pvSubmit">Submit Request</button></div>' : ''));
+    if (opts && opts.submit) {
+      document.getElementById('pvBack').onclick = closeModal;
+      document.getElementById('pvSubmit').onclick = function () { opts.submit(); };
+    }
     var back = document.getElementById('modalBack');
     if (back) back.classList.add('no-print-modal');
     var box = document.getElementById('certPreview');
