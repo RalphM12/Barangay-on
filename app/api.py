@@ -956,7 +956,7 @@ def residents():
                 .where(Transaction.resident_id == R.id, Service.category == cat).correlate(R).scalar_subquery())
 
     data = rows(db.session.execute(paged(
-        select(R.id, R.user_id, R.first_name, R.middle_name, R.last_name, R.address, R.contact_no, R.status, R.created_at, R.birthdate, R.civil_status, R.sex,
+        select(R.id, R.user_id, R.first_name, R.middle_name, R.last_name, R.address, R.contact_no, R.status, R.created_at, R.birthdate, R.civil_status, R.sex, R.suffix, R.occupation, R.id_proof,
                case((R.user_id.is_not(None), 1), else_=0).label("has_account"),
                select(User.created_at).where(User.id == R.user_id).correlate(R).scalar_subquery().label("account_created"),
                cnt("document").label("doc_count"), cnt("complaint").label("complaint_count"), cnt("report").label("report_count"),
@@ -965,6 +965,8 @@ def residents():
     is_admin = user["role"] == "admin"
     for r in data:
         r["avatar"] = avatar_url(r["user_id"]) if r["user_id"] else ""
+        r["suffix"], r["occupation"] = r.get("suffix") or "", r.get("occupation") or ""
+        r["id_proof"] = url_for("public.resident_id_file", filename=r["id_proof"]) if r.get("id_proof") else ""
         del r["user_id"]
         if not is_admin:
             r.pop("username", None)

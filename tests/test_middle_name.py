@@ -52,3 +52,5 @@ def test_registration_extras(app, client):
 def test_registration_requires_id(client):
     r = _register(client, id_proof=(io.BytesIO(b"not an image"), "x.png"))
     assert r.status_code == 200 and "JPG, PNG, WEBP or PDF" in r.get_data(as_text=True)
+
+
