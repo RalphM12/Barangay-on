@@ -1,5 +1,5 @@
 {% extends "public_base.html" %}
-{% from "macros.html" import brand_mark %}
+{% from "macros.html" import brand_mark, theme_toggle %}
 {% set page_css = 'home' %}{% set body_class = 'gp-home' %}
 {% block title %}Barangay-On | Online Resident Portal{% endblock %}
 {% block brand_href %}#home{% endblock %}
@@ -11,6 +11,15 @@
       <a href="#services">Services</a>
       <a href="#hotlines">Hotlines</a>
       <a href="#gallery">Gallery</a>
+{% endblock %}
+{% block nav_toggle %}{% endblock %}
+{% block topbar_right %}
+    <div class="topbar-right">
+      <time class="topbar-clock" id="topClock" aria-label="Current date and time"></time>
+      <a class="tb-btn tb-solid" href="{{ url_for('public.login') }}">Login</a>
+      <a class="tb-btn tb-ghost" href="{{ url_for('public.register') }}">Register</a>
+      {{ theme_toggle() }}
+    </div>
 {% endblock %}
 {% block footer_title %}{{ barangay }}{% endblock %}
 {% block footer_sub %}Barangay Management System{% endblock %}
@@ -145,4 +154,7 @@
     </section>
   </main>
 {% endblock %}
-{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script><script src="{{ static_v('js/gallery-ar.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script><script src="{{ static_v('js/gallery-ar.js') }}"></script>
+<script>(function(){var el=document.getElementById('topClock');if(!el)return;function t(){var d=new Date(),o={timeZone:'Asia/Manila'};
+el.innerHTML=d.toLocaleDateString('en-PH',Object.assign({weekday:'short',month:'short',day:'numeric',year:'numeric'},o))+'<br>'+d.toLocaleTimeString('en-PH',Object.assign({hour:'numeric',minute:'2-digit',second:'2-digit'},o));}
+t();setInterval(t,1000);})();</script>{% endblock %}

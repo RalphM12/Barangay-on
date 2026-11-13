@@ -546,3 +546,19 @@ body.gp-home .hero-logo { display: block; width: min(420px, 78%); height: auto; 
 
 /* Photo slideshow: slightly stronger shade so the white hero text stays readable on bright photos */
 body.gp-home .hero-shade { background: linear-gradient(180deg, rgba(10, 20, 45, .34), rgba(10, 20, 45, .62)); }
+
+/* Home top bar: brand left, links centred, clock + Login/Register right */
+@media (min-width: 961px) {
+  body.gp-home .topbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  body.gp-home .topbar-nav { justify-self: center; }
+  body.gp-home .topbar-right { justify-self: end; }
+}
+body.gp-home .topbar-right { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+body.gp-home .topbar-clock { font-size: 12.5px; font-weight: 600; color: var(--muted, #5b6b8a); line-height: 1.2; text-align: right; margin-right: 6px; }
+body.gp-home .tb-btn { padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700; text-decoration: none; line-height: 1.2; transition: transform .2s ease, background .2s ease; }
+body.gp-home .tb-btn:hover { transform: translateY(-1px); }
+body.gp-home .tb-solid { background: #2b56c9; color: #fff; box-shadow: 0 6px 14px -8px rgba(43,86,201,.8); }
+body.gp-home .tb-ghost { background: transparent; color: var(--ink, #14213d); border: 1px solid var(--g-line, rgba(20,30,60,.2)); }
+body.gp-home .tb-ghost:hover { background: var(--hover, rgba(20,30,60,.06)); }
+@media (max-width: 1600px) { body.gp-home .brand-sub { display: none; } }
+@media (max-width: 960px) { body.gp-home .topbar-right { width: 100%; justify-content: space-between; } }

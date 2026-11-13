@@ -24,8 +24,9 @@
     </a>
     <nav class="topbar-nav" aria-label="Main">
       {% block nav %}{% endblock %}
-      {{ theme_toggle() }}
+      {% block nav_toggle %}{{ theme_toggle() }}{% endblock %}
     </nav>
+    {% block topbar_right %}{% endblock %}
   </header>
   {% block main %}{% endblock %}
   <footer class="footer">
