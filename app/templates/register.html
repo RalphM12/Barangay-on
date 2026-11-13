@@ -34,7 +34,7 @@
         {% elif errors %}
           <div class="error" role="alert">Please fix the highlighted fields.</div>
         {% endif %}
-        <form method="post" action="" id="registerForm" autocomplete="off" novalidate>
+        <form method="post" action="" id="registerForm" autocomplete="off" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="csrf" value="{{ csrf }}">
           <div class="row-2">
             <div>
@@ -53,6 +53,14 @@
               <label for="last_name">Last name</label>
               <input type="text" id="last_name" name="last_name" maxlength="60" value="{{ old.last_name }}" required{{ bad('last_name') }}>
               {{ field_error('last_name') }}
+            </div>
+            <div>
+              <label for="suffix">Suffix <small>(optional)</small></label>
+              <select id="suffix" name="suffix"{{ bad('suffix') }}>
+                <option value="">None</option>
+                {% for opt in suffix_options %}<option value="{{ opt }}"{% if old.suffix == opt %} selected{% endif %}>{{ opt }}</option>{% endfor %}
+              </select>
+              {{ field_error('suffix') }}
             </div>
           </div>
           <label for="address">Address</label>
@@ -93,7 +101,16 @@
               <input type="tel" id="contact_no" name="contact_no" inputmode="numeric" maxlength="11" pattern="[0-9]{7,11}" autocomplete="tel" placeholder="09171234567" value="{{ old.contact_no }}" required{{ bad('contact_no') }}>
               {{ field_error('contact_no') }}
             </div>
+            <div>
+              <label for="occupation">Occupation</label>
+              <input type="text" id="occupation" name="occupation" maxlength="80" placeholder="e.g. Teacher, Farmer, Student" value="{{ old.occupation }}" required{{ bad('occupation') }}>
+              {{ field_error('occupation') }}
+            </div>
           </div>
+          <label for="id_proof">Valid government-issued ID or proof of billing / residency</label>
+          <input type="file" id="id_proof" name="id_proof" accept="image/jpeg,image/png,image/webp,application/pdf" required{{ bad('id_proof') }}>
+          <small class="muted">Upload a clear photo or PDF (JPG, PNG, WEBP or PDF, 3 MB at most). Only the barangay office can see it; it is used to verify that you live here.</small>
+          {{ field_error('id_proof') }}
           <label for="username">Username</label>
           <input type="text" id="username" name="username" maxlength="30" autocapitalize="none" value="{{ old.username }}" required{{ bad('username') }}>
           {{ field_error('username') }}

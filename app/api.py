@@ -9,7 +9,7 @@ import re
 import secrets
 from datetime import date, datetime, timedelta
 
-from flask import Blueprint, Response, current_app, jsonify, request, session
+from flask import Blueprint, Response, current_app, jsonify, request, session, url_for
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -536,7 +536,8 @@ def my_transactions():
     return jsonify({
         "rows": data, "services": services,
         "profile": {"resident_no": reg_no(resident.id), "name": display_name(resident.first_name, resident.middle_name, resident.last_name),
-                    "first_name": resident.first_name, "middle_name": resident.middle_name or "", "last_name": resident.last_name,
+                    "first_name": resident.first_name, "middle_name": resident.middle_name or "", "last_name": (resident.last_name + " " + (resident.suffix or "")).strip(),
+                    "occupation": resident.occupation or "",
                     "address": resident.address, "contact_no": resident.contact_no, "status": resident.status,
                     "birthdate": resident.birthdate.strftime("%Y-%m-%d") if resident.birthdate else "", "civil_status": resident.civil_status or ""},
         "purposes": DOC_PURPOSES, "civil_statuses": CIVIL_STATUSES, "today": date.today().strftime("%Y-%m-%d"),
@@ -988,6 +989,8 @@ def resident_lookup():
         return jsonify({"resident": {
             "id": r.id, "first_name": r.first_name, "middle_name": r.middle_name or "", "last_name": r.last_name, "address": r.address, "contact_no": r.contact_no,
             "birthdate": r.birthdate.strftime("%Y-%m-%d") if r.birthdate else None, "civil_status": r.civil_status, "sex": r.sex,
+            "suffix": r.suffix or "", "occupation": r.occupation or "",
+            "id_proof": url_for("public.resident_id_file", filename=r.id_proof) if r.id_proof else "",
             "status": r.status, "has_account": 1 if r.user_id else 0, "resident_no": reg_no(r.id)}})
     q = (request.args.get("q") or "").strip()
     if len(q) < 2:

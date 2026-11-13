@@ -41,6 +41,54 @@ def mural(c):
 
 CIVIL_OPTIONS = ["Single", "Married", "Widowed", "Separated"]
 SEX_OPTIONS = ["Male", "Female"]
+SUFFIX_OPTIONS = ["Jr.", "Sr.", "II", "III", "IV", "V"]
+ID_TYPES = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
+
+
+def id_dir():
+    from pathlib import Path
+    d = Path(current_app.config["PRIVATE_UPLOAD_FOLDER"]) / "resident_ids"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _save_id_proof(file):
+    """Validate (JPG / PNG / WEBP picture or PDF, 3 MB) and store under a server-chosen name. Returns (filename, error)."""
+    import io, secrets
+    if not file or not file.filename:
+        return None, "Upload a valid government-issued ID or proof of billing / residency."
+    data = file.read(3 * 1024 * 1024 + 1)
+    if len(data) > 3 * 1024 * 1024:
+        return None, "That file is too large (3 MB maximum)."
+    ext = None
+    if data[:5] == b"%PDF-":
+        ext = "pdf"
+    else:
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(data))
+            kind = img.format
+            img.verify()
+            ext = ID_TYPES.get(kind)
+        except Exception:
+            ext = None
+    if not ext:
+        return None, "Please upload a JPG, PNG, WEBP or PDF file."
+    name = f"id_{secrets.token_hex(10)}.{ext}"
+    (id_dir() / name).write_bytes(data)
+    return name, None
+
+
+@bp.get("/resident-id/<path:filename>")
+def resident_id_file(filename):
+    """Registration ID / proof of billing: visible to barangay staff only, never public."""
+    from .core import require_roles
+    require_roles(["admin", "staff", "captain"])
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", filename):
+        return ("Not found", 404)
+    resp = send_from_directory(id_dir(), filename, max_age=0)
+    resp.headers["Cache-Control"] = "private, no-store"
+    return resp
 
 
 @bp.get("/uploads/avatars/<path:filename>")
@@ -189,7 +237,7 @@ def register():
     if existing:
         return redirect(home_for(existing["role"]))
     errors = {}
-    old = {k: "" for k in ("first_name", "middle_name", "last_name", "address", "birthdate", "sex", "civil_status", "contact_no", "username")}
+    old = {k: "" for k in ("first_name", "middle_name", "last_name", "suffix", "occupation", "address", "birthdate", "sex", "civil_status", "contact_no", "username")}
 
     if request.method == "POST":
         for k in old:
@@ -203,6 +251,10 @@ def register():
             errors["middle_name"] = "Middle name is too long (up to 60 characters)."
         if old["last_name"] == "" or len(old["last_name"]) > 60:
             errors["last_name"] = "Enter your last name (up to 60 characters)."
+        if old["suffix"] and old["suffix"] not in SUFFIX_OPTIONS:
+            errors["suffix"] = "Choose a suffix from the list."
+        if old["occupation"] == "" or len(old["occupation"]) > 80:
+            errors["occupation"] = "Enter your occupation (up to 80 characters)."
         if old["address"] == "" or len(old["address"]) > 150:
             errors["address"] = "Enter your address, such as your purok and street."
         bd = None
@@ -227,6 +279,11 @@ def register():
             errors["password"] = weak
         elif password != confirm:
             errors["confirm_password"] = "The passwords do not match."
+        id_name = None
+        if "id_proof" not in errors:
+            id_name, id_err = _save_id_proof(request.files.get("id_proof"))
+            if id_err:
+                errors["id_proof"] = id_err
         if request.form.get("privacy_consent") != "1":
             errors["privacy"] = "Please read and accept the data privacy notice to register."
         if attempts_in_window("register", "ip:" + client_ip(), 60) >= 5:
@@ -239,7 +296,7 @@ def register():
                          position="Resident", role="resident")
                 db.session.add(u)
                 db.session.flush()
-                db.session.add(Resident(user_id=u.id, first_name=old["first_name"], middle_name=old["middle_name"], last_name=old["last_name"], address=old["address"],
+                db.session.add(Resident(user_id=u.id, first_name=old["first_name"], middle_name=old["middle_name"], last_name=old["last_name"], suffix=old["suffix"], occupation=old["occupation"], id_proof=id_name, address=old["address"],
                                         birthdate=bd, sex=old["sex"], civil_status=old["civil_status"], contact_no=old["contact_no"], status="Pending"))
                 db.session.commit()
                 notify_staff("New resident registration", f"{full_name} registered online and is Waiting for Verification. Open Residents and click Verify This Resident to approve.", "info")
@@ -254,7 +311,7 @@ def register():
                 db.session.rollback()
                 current_app.logger.exception("register failed")
                 errors["form"] = "Cannot save your registration. " + db_error_hint(exc)
-    return render_template("register.html", errors=errors, old=old, civil_options=CIVIL_OPTIONS, sex_options=SEX_OPTIONS, csrf=csrf_token(),
+    return render_template("register.html", errors=errors, old=old, civil_options=CIVIL_OPTIONS, sex_options=SEX_OPTIONS, suffix_options=SUFFIX_OPTIONS, csrf=csrf_token(),
                            age=_age_from(old["birthdate"]),
                            bd_min=(date.today() - timedelta(days=365 * 120 + 30)).strftime("%Y-%m-%d"),
                            bd_max=date.today().strftime("%Y-%m-%d"))
