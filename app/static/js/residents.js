@@ -5,7 +5,7 @@
   var manage = app.dataset.manage === '1';
   var canDelete = app.dataset.delete === '1';   // only the administrator can delete a resident
   var PER = PAGE_SIZE; // rows per page: set in Settings > General
-  var state = { page: 1, q: '', status: '' };
+  var state = { page: 1, q: '', status: '', account: '', purok: '', from: '', to: '' };
   var rowsCache = [];
   var STATUSES = ['Registered', 'Pending', 'Inactive'];
 
@@ -13,9 +13,13 @@
 
   async function load() {
     try {
-      var d = await getJson(api + '?' + qs({ q: state.q, status: state.status, page: state.page, per_page: PER }));
+      var d = await getJson(api + '?' + qs({ q: state.q, status: state.status, account: state.account, purok: state.purok, from: state.from, to: state.to, page: state.page, per_page: PER }));
       if (!d) return;
       rowsCache = d.rows;
+      var ps = $('#resPurok');
+      if (ps && d.puroks && ps.options.length - 1 !== d.puroks.length) {
+        ps.innerHTML = '<option value="">Address (Purok): all</option>' + d.puroks.map(function (a) { return '<option' + (a === state.purok ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('');
+      }
 
       $('#resCount').textContent = d.total + ' resident' + (d.total === 1 ? '' : 's');
       $('#resBody').innerHTML = d.rows.map(function (r) {
@@ -199,6 +203,9 @@
 
   $('#resSearch').addEventListener('input', debounce(function () { state.q = this.value.trim(); state.page = 1; load(); }, 300));
   $('#resStatus').addEventListener('change', function () { state.status = this.value; state.page = 1; load(); });
+  [['resAccount', 'account'], ['resPurok', 'purok'], ['resFrom', 'from'], ['resTo', 'to']].forEach(function (p) {
+    $('#' + p[0]).addEventListener('change', function () { state[p[1]] = this.value; state.page = 1; load(); });
+  });
 
   if (manage && $('#resAdd')) $('#resAdd').addEventListener('click', function () { openForm(null); });
 

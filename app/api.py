@@ -948,6 +948,21 @@ def residents():
     if q:
         where.append(or_(full_name_expr().contains(q, autoescape=True), R.address.contains(q, autoescape=True),
                          R.contact_no.contains(q, autoescape=True)))
+    account = request.args.get("account", "")
+    if account == "yes":
+        where.append(R.user_id.is_not(None))
+    elif account == "no":
+        where.append(R.user_id.is_(None))
+    purok = (request.args.get("purok") or "").strip()
+    if purok:
+        where.append(R.address == purok)
+    for key, op in (("from", ">="), ("to", "<")):
+        try:
+            d = datetime.strptime(request.args.get(key, ""), "%Y-%m-%d")
+        except ValueError:
+            continue
+        where.append(R.created_at >= d if op == ">=" else R.created_at < d + timedelta(days=1))
+    order = (R.created_at.desc(), R.id.desc())      # newest registered first
     page, per = page_args()
     total = db.session.scalar(select(func.count()).select_from(R).where(*where)) or 0
 
@@ -961,7 +976,7 @@ def residents():
                select(User.created_at).where(User.id == R.user_id).correlate(R).scalar_subquery().label("account_created"),
                cnt("document").label("doc_count"), cnt("complaint").label("complaint_count"), cnt("report").label("report_count"),
                select(User.username).where(User.id == R.user_id, User.role == "resident").correlate(R).scalar_subquery().label("username"))
-        .where(*where).order_by(R.last_name.asc(), R.first_name.asc(), R.id.asc()), page, per)))
+        .where(*where).order_by(*order), page, per)))
     is_admin = user["role"] == "admin"
     for r in data:
         r["avatar"] = avatar_url(r["user_id"]) if r["user_id"] else ""
@@ -970,7 +985,8 @@ def residents():
         del r["user_id"]
         if not is_admin:
             r.pop("username", None)
-    return jsonify({"rows": data, "total": total, "page": page, "per_page": per})
+    puroks = [a[0] for a in db.session.execute(select(R.address).where(R.deleted_at.is_(None), R.is_walkin.is_(False), R.address != "").group_by(R.address).order_by(R.address)).all()]
+    return jsonify({"rows": data, "total": total, "page": page, "per_page": per, "puroks": puroks})
 
 
 @bp.get("/resident_lookup")
