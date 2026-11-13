@@ -3,7 +3,8 @@
 (function () {
   var templates = {
     'Barangay Clearance': [
-      ['Full Name','text','full_name','Type your complete name (first, middle, last)','wide'], ['Date of Birth','date','birth_date','',''],
+      ['First Name','text','first_name','Your first name',''], ['Middle Name','text','middle_name','Leave blank if none',''],
+      ['Last Name','text','last_name','Your last name',''], ['Date of Birth','date','birth_date','',''],
       ['Complete Residential Address','textarea','complete_address','Enter house/lot no., street, purok or sitio, barangay, and city/municipality','wide'],
       ['Year or Date You Started Residing in the Barangay','text','residency_start','Enter the year you moved into the barangay (e.g., 2020)','wide'],
       ['Civil Status','radios','civil_status',['Single','Married','Widowed','Separated'],'wide'],
@@ -23,14 +24,16 @@
       ['Contact Number','tel','contact_number','Enter your 11-digit mobile number (e.g., 09171234567)','wide']
     ],
     'Certificate of Indigency': [
-      ['Full Name','text','full_name','Type your complete name (first, middle, last)','wide'], ['Date of Birth','date','birth_date','',''],
+      ['First Name','text','first_name','Your first name',''], ['Middle Name','text','middle_name','Leave blank if none',''],
+      ['Last Name','text','last_name','Your last name',''], ['Date of Birth','date','birth_date','',''],
       ['Complete Address','textarea','complete_address','Enter your complete current address, including barangay and city','wide'],
       ['Occupation / Employment Status','select','occupation',['Employed','Self-employed','Unemployed','Student','Senior Citizen','Other'],'wide'],
       ['Approximate Monthly Household Income (₱)','text','monthly_income','Enter estimated monthly household income in pesos (e.g., ₱8,000 or ₱5,000–₱10,000)','wide'], ['Number of Household Members','number','household_members','Enter the total number of people living in your household','wide'],
       ['Purpose of Request','select','purpose',['Financial assistance','Medical assistance','Educational assistance','Employment','Other lawful purpose','Others'],'wide'], ['Contact Number','tel','contact_number','Enter your 11-digit mobile number (e.g., 09171234567)','wide']
     ],
     'Certificate of Residency': [
-      ['Full Name','text','full_name','Type your complete name (first, middle, last)','wide'], ['Date of Birth','date','birth_date','',''],
+      ['First Name','text','first_name','Your first name',''], ['Middle Name','text','middle_name','Leave blank if none',''],
+      ['Last Name','text','last_name','Your last name',''], ['Date of Birth','date','birth_date','',''],
       ['Complete Residential Address','textarea','complete_address','Enter house/lot no., street, purok or sitio, barangay, and city/municipality','wide'],
       ['Year or Date You Started Residing in the Barangay','text','residency_start','Enter the year you moved into the barangay (e.g., 2020)','wide'],
       ['Civil Status','radios','civil_status',['Single','Married','Widowed','Separated'],'wide'],
@@ -38,10 +41,13 @@
     ]
   };
 
-  // prefill: { name, address, contact, birth, civil }  -> values that are already known (all stay editable)
+  // prefill: { name, first, middle, last, address, contact, birth, civil }  -> values that are already known (all stay editable)
   function valueFor(name, prefill) {
     var p = prefill || {};
     if (name === 'full_name' || name === 'owner_name') return p.name || '';
+    if (name === 'first_name') return p.first || '';
+    if (name === 'middle_name') return p.middle || '';
+    if (name === 'last_name') return p.last || '';
     if (name === 'complete_address' || name === 'business_address') return p.address || '';
     if (name === 'contact_number') return p.contact || '';
     if (name === 'birth_date') return p.birth || '';
@@ -59,7 +65,7 @@
         f[3].forEach(function(v){ var wrap=document.createElement('label'); wrap.className='radio-option'; var input=document.createElement('input'); input.type='radio'; input.name=f[2]; input.value=v; input.required=true; wrap.appendChild(input); wrap.appendChild(document.createTextNode(v)); el.appendChild(wrap); });
         label.appendChild(el); return label;
       } else { el = document.createElement('input'); el.type = f[1]; if (f[1] === 'date') { el.min='1900-01-01'; el.max=today || ''; } }
-      el.name=f[2]; el.id='df_'+f[2]; el.required = !['monthly_income','residency_start'].includes(f[2]);
+      el.name=f[2]; el.id='df_'+f[2]; el.required = !['monthly_income','residency_start','middle_name'].includes(f[2]);
       if (f[3] && typeof f[3] === 'string') el.placeholder=f[3];
       el.value = valueFor(f[2], prefill);
       label.appendChild(el); return label;
@@ -101,7 +107,7 @@
         return;
       }
       var v = valueFor(el.name, prefill);
-      if (v !== '' || el.name === 'full_name' || el.name === 'owner_name' || el.name === 'complete_address' || el.name === 'business_address' || el.name === 'contact_number' || el.name === 'birth_date') el.value = v;
+      if (v !== '' || el.name === 'full_name' || el.name === 'first_name' || el.name === 'middle_name' || el.name === 'last_name' || el.name === 'owner_name' || el.name === 'complete_address' || el.name === 'business_address' || el.name === 'contact_number' || el.name === 'birth_date') el.value = v;
     });
   }
 

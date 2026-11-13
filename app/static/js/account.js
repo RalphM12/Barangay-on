@@ -54,13 +54,13 @@
     if (d.resident) {
       $('#staffFields').hidden = true;
       $('#residentFields').hidden = false;
-      ['first_name', 'last_name', 'address', 'birthdate', 'sex', 'civil_status', 'contact_no'].forEach(function (k) {
+      ['first_name', 'middle_name', 'last_name', 'address', 'birthdate', 'sex', 'civil_status', 'contact_no'].forEach(function (k) {
         profile.elements[k].value = d.resident[k] || '';
         profile.elements[k].disabled = true;          // residents cannot edit - only staff/admin (Residents page)
       });
       var saveRow = $('#profileSaveRow');
       if (saveRow) saveRow.hidden = true;
-      shown = (d.resident.first_name + ' ' + d.resident.last_name).trim();
+      shown = [d.resident.first_name, d.resident.middle_name, d.resident.last_name].filter(Boolean).join(' ').trim();
     } else {
       profile.elements.full_name.value = d.user.full_name;
     }

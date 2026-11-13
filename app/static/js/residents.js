@@ -19,7 +19,7 @@
 
       $('#resCount').textContent = d.total + ' resident' + (d.total === 1 ? '' : 's');
       $('#resBody').innerHTML = d.rows.map(function (r) {
-        return '<tr><td>' + esc(r.first_name + ' ' + r.last_name) + '</td><td>' + esc(r.address || '-') + '</td>' +
+        return '<tr><td>' + esc(fullName(r)) + '</td><td>' + esc(r.address || '-') + '</td>' +
           '<td>' + esc(r.contact_no || '-') + '</td>' +
           '<td><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(resLabel(r.status)) + '</span></td>' +
           '<td>' + (Number(r.has_account) ? 'Yes' : 'No') + '</td><td>' + fmtDate(r.created_at) + '</td>' +
@@ -52,7 +52,7 @@
     var photo = r.avatar ? '<img src="' + esc(r.avatar) + '" alt="Profile photo of ' + esc(r.first_name) + '">' : '<span>' + esc(initials(r)) + '</span>';
     var age = ageOf(r.birthdate);
     return '<div class="rp-card"><div class="rp-photo">' + photo + '</div><div class="rp-info">' +
-      '<strong>' + esc(r.first_name + ' ' + r.last_name) + '</strong>' +
+      '<strong>' + esc(fullName(r)) + '</strong>' +
       '<div class="rp-sub"><span class="badge ' + (RES_BADGE[r.status] || '') + '">' + esc(resLabel(r.status)) + '</span> ' +
       '<small class="muted">RES-' + String(r.id).padStart(5, '0') + (age !== '' ? ' &middot; ' + age + ' yrs old' : '') + '</small></div>' +
       '<div class="rp-meta"><span>Registered <b>' + fmtDate(r.created_at) + '</b></span>' +
@@ -94,11 +94,12 @@
   }
 
   function openForm(r) {
-    r = r || { id: 0, first_name: '', last_name: '', address: '', contact_no: '', status: 'Registered', birthdate: '', civil_status: '', sex: '' };
+    r = r || { id: 0, first_name: '', middle_name: '', last_name: '', address: '', contact_no: '', status: 'Registered', birthdate: '', civil_status: '', sex: '' };
     var html = profileCard(r) + '<form class="form" id="resForm">' +
       '<div class="rp-section">Personal information</div>' +
       '<div class="row2"><label>First name<input type="text" name="first_name" maxlength="60" required value="' + esc(r.first_name) + '"></label>' +
-      '<label>Last name<input type="text" name="last_name" maxlength="60" required value="' + esc(r.last_name) + '"></label></div>' +
+      '<label>Middle name<input type="text" name="middle_name" maxlength="60" value="' + esc(r.middle_name || '') + '"></label></div>' +
+      '<div class="row2"><label>Last name<input type="text" name="last_name" maxlength="60" required value="' + esc(r.last_name) + '"></label><span></span></div>' +
       '<div class="row2"><label>Date of birth<input type="date" name="birthdate" max="' + new Date().toISOString().slice(0, 10) + '" value="' + esc((r.birthdate || '').slice(0, 10)) + '"></label>' +
       '<label>Sex<select name="sex"><option value="">-</option>' + ['Male', 'Female'].map(function (c) {
         return '<option' + (c === r.sex ? ' selected' : '') + '>' + c + '</option>';
@@ -149,7 +150,7 @@
     }
     var regBtn = body.querySelector('#resRegister');
     if (regBtn) regBtn.addEventListener('click', function () {
-      if (!confirm('Verify ' + r.first_name + ' ' + r.last_name + '?\n\nThey will be registered and able to request documents, file complaints and send community reports.')) return;
+      if (!confirm('Verify ' + fullName(r) + '?\n\nThey will be registered and able to request documents, file complaints and send community reports.')) return;
       body.querySelector('#resRegFlag').value = '1';
       var f = body.querySelector('#resForm');
       if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -178,7 +179,7 @@
   }
 
   async function removeResident(r) {
-    var name = r.first_name + ' ' + r.last_name;
+    var name = fullName(r);
     if (!confirm('Delete ' + name + ' from the residents list?' + (Number(r.has_account) ? '\n\nTheir login account will be removed.' : '') +
                  '\n\nTheir document requests, complaints and transactions are NOT deleted - the records remain.')) return;
     var form = new FormData();

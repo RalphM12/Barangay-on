@@ -114,10 +114,13 @@
     var civil = pick(v, ['civil status']) || t.civil_status || '';
     var full = (pick(v, ['full name', 'name', "owner's name", 'owner name']) || t.resident || '').trim();
     var parts = full.split(/\s+/);
-    var first = t.first_name || pick(v, ['first name']) || parts.slice(0, Math.max(1, parts.length - 1)).join(' ');
-    var last = t.last_name || pick(v, ['last name']) || (parts.length > 1 ? parts[parts.length - 1] : '');
+    var typed = pick(v, ['first name']);                  // the application form asks for the three parts
+    var first = typed || t.first_name || parts.slice(0, Math.max(1, parts.length - 1)).join(' ');
+    var last = (typed && pick(v, ['last name'])) || t.last_name || (parts.length > 1 ? parts[parts.length - 1] : '');
+    var middle = typed ? pick(v, ['middle name']) : (t.middle_name || '');
+    if (/^none$/i.test(middle)) middle = '';
     return {
-      first: first.toUpperCase(), middle: pick(v, ['middle name']).toUpperCase(), last: last.toUpperCase(),
+      first: first.toUpperCase(), middle: middle.toUpperCase(), last: last.toUpperCase(),
       captainName: t.signed_by || t.captain_name || '',
       now: now,
       name: (pick(v, ['full name', 'name', "owner's name", 'owner name']) || t.resident || '').toUpperCase(),

@@ -52,6 +52,7 @@ class Resident(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
     first_name = db.Column(db.String(60), nullable=False)
+    middle_name = db.Column(db.String(60), nullable=False, default="")
     last_name = db.Column(db.String(60), nullable=False)
     address = db.Column(db.String(150), nullable=False, default="")
     birthdate = db.Column(db.Date)

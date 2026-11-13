@@ -138,6 +138,11 @@ def rows(result) -> list:
     return [{k: fmt_value(v) for k, v in r._mapping.items()} for r in result]
 
 
+def display_name(first, middle, last) -> str:
+    """First Middle Last, skipping a middle name that is empty."""
+    return " ".join(p for p in ((first or "").strip(), (middle or "").strip(), (last or "").strip()) if p)
+
+
 def full_name_expr(model=Resident):
     return model.first_name + " " + model.last_name
 
