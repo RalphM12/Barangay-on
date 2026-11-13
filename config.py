@@ -103,7 +103,7 @@ class Config:
         ("Health Center", "0917 000 0002"),
         ("Fire Station", "0917 000 0003"),
     ]
-    OFFICE_HOURS = "Monday to Sunday, 24/7"
+    BARANGAY_ON = "24/7"
     EMAIL = "stoninobaliwagcity@gmail.com"
 
 
