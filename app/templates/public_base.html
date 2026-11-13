@@ -36,6 +36,9 @@
     </div>
     <p>&copy; {{ year }} Barangay-On. All rights reserved.</p>
   </footer>
+  <script>(function(){var el=document.getElementById('topClock');if(!el)return;function t(){var d=new Date(),o={timeZone:'Asia/Manila'};
+el.innerHTML=d.toLocaleDateString('en-PH',Object.assign({weekday:'short',month:'short',day:'numeric',year:'numeric'},o))+'<br>'+d.toLocaleTimeString('en-PH',Object.assign({hour:'numeric',minute:'2-digit',second:'2-digit'},o));}
+t();setInterval(t,1000);})();</script>
   {% block scripts %}{% endblock %}
   <script src="{{ static_v('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ static_v('js/glass-public.js') }}"></script>

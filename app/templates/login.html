@@ -3,9 +3,7 @@
 {% set page_css = 'login' %}{% set body_class = 'gp-auth' %}
 {% block title %}Login | Barangay-On{% endblock %}
 {% block nav %}
-      <a href="{{ url_for('public.index') }}">Home</a>
-      <a href="{{ url_for('public.login') }}" class="active" aria-current="page">Login</a>
-      <a href="{{ url_for('public.register') }}">Register</a>
+      <time class="topbar-clock" id="topClock" aria-label="Current date and time"></time>
 {% endblock %}
 {% block main %}
   <main class="split">

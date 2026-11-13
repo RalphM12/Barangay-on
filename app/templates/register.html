@@ -3,9 +3,7 @@
 {% set page_css = 'login' %}{% set body_class = 'gp-auth' %}
 {% block title %}Register | Barangay-On{% endblock %}
 {% block nav %}
-      <a href="{{ url_for('public.index') }}">Home</a>
-      <a href="{{ url_for('public.login') }}">Login</a>
-      <a href="{{ url_for('public.register') }}" class="active" aria-current="page">Register</a>
+      <time class="topbar-clock" id="topClock" aria-label="Current date and time"></time>
 {% endblock %}
 {% macro field_error(key) %}{% if key in errors %}<p class="field-error" id="err-{{ key }}">{{ errors[key] }}</p>{% endif %}{% endmacro %}
 {% macro bad(key) %}{% if key in errors %} class="invalid" aria-invalid="true" aria-describedby="err-{{ key }}"{% endif %}{% endmacro %}
@@ -27,6 +25,7 @@
 
     <section class="split-right">
       <div class="form-wrap form-wide">
+        <a class="back-link back-link-dark" href="{{ url_for('public.index') }}">&larr; Back to home</a>
         <h2>Register as Resident</h2>
         <p class="sub">All fields are required.</p>
         {% if 'form' in errors %}

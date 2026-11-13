@@ -153,7 +153,4 @@
     </section>
   </main>
 {% endblock %}
-{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script><script src="{{ static_v('js/gallery-ar.js') }}"></script>
-<script>(function(){var el=document.getElementById('topClock');if(!el)return;function t(){var d=new Date(),o={timeZone:'Asia/Manila'};
-el.innerHTML=d.toLocaleDateString('en-PH',Object.assign({weekday:'short',month:'short',day:'numeric',year:'numeric'},o))+'<br>'+d.toLocaleTimeString('en-PH',Object.assign({hour:'numeric',minute:'2-digit',second:'2-digit'},o));}
-t();setInterval(t,1000);})();</script>{% endblock %}
+{% block scripts %}<script src="{{ static_v('js/home.js') }}"></script><script src="{{ static_v('js/gallery-ar.js') }}"></script>{% endblock %}
