@@ -176,7 +176,7 @@ def register_pages(app):
     def documents():
         require_role("resident")
         return render_page("resident", "documents", "Documents", "Request barangay documents and track them.", "resident_tx",
-                           ["doc_forms.js", "resident_tx.js"], category="document", type_label="Document type",
+                           ["doc_forms.js", "certificate.js", "resident_tx.js"], category="document", type_label="Document type",
                            detail_label="Purpose / details", button="Request a Document")
 
     @resident.get("/complaints")
