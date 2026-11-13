@@ -109,6 +109,8 @@
       }).join('') + '</select></label>' +
       '<label>Address<input type="text" name="address" maxlength="150" list="addrList" autocomplete="off" value="' + esc(r.address) + '"><datalist id="addrList"></datalist></label>' +
       '<label>Contact number<input type="text" name="contact_no" inputmode="numeric" maxlength="11" value="' + esc(r.contact_no) + '"></label>' +
+      (r.id ? '<div class="rp-section">Registration details</div><div class="reg-extra"><div><b>Suffix:</b> ' + esc(r.suffix || 'None') + '</div><div><b>Occupation:</b> ' + esc(r.occupation || '-') + '</div>' +
+        '<div><b>ID / proof of billing:</b> ' + (r.id_proof ? '<a href="' + esc(r.id_proof) + '" target="_blank" rel="noopener">View uploaded file</a>' : 'None uploaded') + '</div></div>' : '') +
       '' + accountFields(r) +
       (r.id && manage && r.status === 'Pending' ? '<input type="hidden" name="register" value="0" id="resRegFlag">' +
         '<p class="verify-note">This resident is <b>Waiting for Verification</b> and cannot yet request documents, file complaints or send reports. Check the details above, then click <b>Verify This Resident</b>.</p>' : '') +

@@ -54,6 +54,9 @@ class Resident(db.Model):
     first_name = db.Column(db.String(60), nullable=False)
     middle_name = db.Column(db.String(60), nullable=False, default="")
     last_name = db.Column(db.String(60), nullable=False)
+    suffix = db.Column(db.String(10), default="")     # Jr., Sr., II ...
+    occupation = db.Column(db.String(80), default="")
+    id_proof = db.Column(db.String(80))               # file name inside uploads/resident_ids/ (private: staff only)
     address = db.Column(db.String(150), nullable=False, default="")
     birthdate = db.Column(db.Date)
     civil_status = db.Column(db.String(20))

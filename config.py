@@ -85,6 +85,7 @@ class Config:
 
     # Uploads (profile photos). Stored on the server, outside any user-controlled path.
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", str(BASE_DIR / "app" / "static" / "uploads"))
+    PRIVATE_UPLOAD_FOLDER = os.environ.get("PRIVATE_UPLOAD_FOLDER", str(BASE_DIR / "private_uploads"))  # NOT under static: resident IDs are staff-only
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024  # hard request limit (avatar limit is 2 MB, signature 300 KB)
 
     JSON_SORT_KEYS = False

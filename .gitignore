@@ -27,3 +27,4 @@ Thumbs.db
 *.zip
 .idea/
 .vscode/
+private_uploads/
