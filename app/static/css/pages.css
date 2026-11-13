@@ -955,3 +955,10 @@ html body .modal-back .modal:has(.view-split) { max-width: min(1400px, 97vw); }
   .cert-edit .f2chk:hover { background: #fff8d6; }
 }
 .cert2 .f2v { white-space: pre-wrap; min-height: 1.25em; }
+
+/* Resident preview: unsigned, not selectable, not printable */
+.cert-preview { position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.cert-preview * { user-select: none; -webkit-user-select: none; }
+.cert-preview-wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 800 clamp(20px, 6vw, 56px)/1.2 Arial, sans-serif; color: rgba(180, 30, 30, .18); transform: rotate(-30deg); pointer-events: none; letter-spacing: .05em; }
+@media print { .no-print-modal, .no-print-modal * { display: none !important; } }

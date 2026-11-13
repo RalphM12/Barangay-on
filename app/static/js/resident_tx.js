@@ -129,7 +129,19 @@
     if (!r) return;
     openModal('Request Details',
       '<div class="request-meta"><span><b>Tracking No.:</b> ' + esc(r.tracking_no) + '</span><span><b>Status:</b> ' + badge(shownStatus(r)) + '</span><span><b>Date filed:</b> ' + fmtDate(r.created_at) + '</span></div>' +
-      (category === 'document' ? documentSnapshot(r.details, r.service) : '<dl class="detail"><dt>Service</dt><dd>' + esc(r.service) + '</dd><dt>Status</dt><dd>' + badge(shownStatus(r)) + '</dd><dt>Date filed</dt><dd>' + fmtDate(r.created_at) + '</dd><dt>Last updated</dt><dd>' + fmtDate(r.updated_at) + '</dd><dt>Details</dt><dd class="pre">' + esc(r.details || 'No details provided.') + '</dd></dl>'));
+      (category === 'document' ? documentSnapshot(r.details, r.service) + '<div style="margin-top:14px"><button type="button" class="btn-sm" id="previewDocBtn">Preview document</button></div>' : '<dl class="detail"><dt>Service</dt><dd>' + esc(r.service) + '</dd><dt>Status</dt><dd>' + badge(shownStatus(r)) + '</dd><dt>Date filed</dt><dd>' + fmtDate(r.created_at) + '</dd><dt>Last updated</dt><dd>' + fmtDate(r.updated_at) + '</dd><dt>Details</dt><dd class="pre">' + esc(r.details || 'No details provided.') + '</dd></dl>'));
+  });
+
+  document.addEventListener('click', function (e) {
+    var pb = e.target.closest('#previewDocBtn');
+    if (!pb) return;
+    var id = pb.closest('.modal') && pb.closest('.modal').querySelector('.request-meta b') ? null : null;
+    var trk = (pb.closest('.modal-body').querySelector('.request-meta span') || {}).textContent || '';
+    var r = rows.filter(function (x) { return trk.indexOf(x.tracking_no) > -1; })[0];
+    if (!r) return;
+    var p = meta.profile || {};
+    window.previewCertificate(Object.assign({ first_name: p.first_name, middle_name: p.middle_name, last_name: p.last_name,
+      address: p.address, birthdate: p.birthdate, civil_status: p.civil_status, resident: p.name || '' }, r));
   });
 
   // Coming from the dashboard "Online Services" cards: jump to the form

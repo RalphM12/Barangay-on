@@ -366,6 +366,26 @@
     window.print();
   }
 
+  // Read-only preview for residents: no Captain signature or name, a PREVIEW watermark, and no copy / print / save shortcuts
+  window.previewCertificate = function (t) {
+    var t2 = Object.assign({}, t, { signed_at: null, signed_by: '', captain_name: '', signature: '', approved_by: '', approved_by_position: '' });
+    var body = openModal('Preview: ' + t.service,
+      '<div class="cert-note">Preview only. This copy has no signature and cannot be copied or printed. Visit the Barangay Hall for the official signed document.</div>' +
+      '<div class="cert-preview" id="certPreview">' + certificateHtml(t2, false) + '<div class="cert-preview-wm" aria-hidden="true">PREVIEW ONLY<br>NOT AN OFFICIAL DOCUMENT</div></div>');
+    var back = document.getElementById('modalBack');
+    if (back) back.classList.add('no-print-modal');
+    var box = document.getElementById('certPreview');
+    ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach(function (ev) {
+      box.addEventListener(ev, function (e) { e.preventDefault(); });
+    });
+    function guard(e) {
+      if (!document.getElementById('certPreview')) { document.removeEventListener('keydown', guard, true); return; }
+      var k = (e.key || '').toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && ['p', 'c', 's', 'a', 'x', 'u'].indexOf(k) > -1) { e.preventDefault(); e.stopPropagation(); }
+    }
+    document.addEventListener('keydown', guard, true);
+    return body;
+  };
   window.certificateHtml = certificateHtml;   // used for previews/tests
 
   // id = transaction id, api = //api/transactions
