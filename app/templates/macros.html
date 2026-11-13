@@ -1,14 +1,11 @@
 {# Small reusable bits #}
 {% macro brand_mark(sw=2.4, sw2=1.6, sw3=3.4, r1=3.4, r2=2.6) -%}
-<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
-  <path d="M32 11 50 25 43 49H21L14 25Z" stroke="#fff" stroke-width="{{ sw }}" stroke-linejoin="round"/>
-  <path d="M32 11V32M14 25 32 32 50 25M21 49 32 32 43 49" stroke="#fff" stroke-opacity=".7" stroke-width="{{ sw2 }}"/>
-  <path d="M14 25 32 11 50 25" stroke="#c9a23c" stroke-width="{{ sw3 }}" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="32" cy="11" r="{{ r1 }}" fill="#17294f" stroke="#c9a23c" stroke-width="2.4"/>
-  <circle cx="14" cy="25" r="{{ r1 }}" fill="#c9a23c"/><circle cx="50" cy="25" r="{{ r1 }}" fill="#c9a23c"/>
-  <circle cx="21" cy="49" r="{{ r2 }}" fill="#fff"/><circle cx="43" cy="49" r="{{ r2 }}" fill="#fff"/>
-  <circle cx="32" cy="32" r="{{ r2 }}" fill="#17294f" stroke="#fff" stroke-width="1.6"/>
-</svg>
+<img class="brand-icon" src="{{ url_for('static', filename='img/brand/icon.png') }}" alt="" width="64" height="64" aria-hidden="true">
+{%- endmacro %}
+
+{% macro brand_wordmark() -%}
+<img class="brand-wordmark wm-light" src="{{ url_for('static', filename='img/brand/wordmark-light.png') }}" alt="Barangay-On" height="30">
+<img class="brand-wordmark wm-dark" src="{{ url_for('static', filename='img/brand/wordmark-dark.png') }}" alt="" aria-hidden="true" height="30">
 {%- endmacro %}
 
 {% macro theme_toggle() -%}
@@ -30,7 +27,7 @@
 {%- endmacro %}
 
 {% macro bell() -%}
-<a class="bell" href="{{ notifications_url() }}" title="Notifications">🔔<b class="pill" data-unread hidden>0</b></a>
+<a class="bell" href="{{ notifications_url() }}" title="Notifications">{{ ui_icon('🔔', 20) }}<b class="pill" data-unread hidden>0</b></a>
 {%- endmacro %}
 
 {% macro menu_button() -%}
@@ -38,7 +35,7 @@
 {%- endmacro %}
 
 {% macro profile_chip(user, with_position=True) -%}
-<a class="profile" href="{{ profile_url(user) }}" title="View my profile"><div class="avatar">👤</div>
+<a class="profile" href="{{ profile_url(user) }}" title="View my profile"><div class="avatar">{{ ui_icon('👤', 20) }}</div>
 {%- if with_position %}<div><strong id="userName">{{ user.full_name }}</strong><small id="userRole">{{ user.position }}</small></div>
 {%- else %}<strong id="userName">{{ user.full_name }}</strong>{% endif %}</a>
 {%- endmacro %}
