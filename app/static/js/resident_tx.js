@@ -65,9 +65,6 @@
     }
     $('#svc').addEventListener('change',syncDoc);
     $('#newForm').addEventListener('reset',function(){setTimeout(syncDoc,0);});
-    $('#newForm').addEventListener('submit',function(e){
-      var sel=$('#svc'); if(!confirm('Submit this request?\n\n'+sel.options[sel.selectedIndex].text+'\nPlease check that all details are correct.')) { e.preventDefault(); e.stopImmediatePropagation(); }
-    });
   }
 
   function documentSnapshot(details, service) {
@@ -102,10 +99,45 @@
   if ($('#svc')) $('#svc').addEventListener('change', syncOther);
   if ($('#newForm')) $('#newForm').addEventListener('reset', function () { setTimeout(syncOther, 0); });
 
+  // Build the same "Label: value" lines the server saves, so the preview matches the final document
+  function previewRecord(f) {
+    var g = function (n) { var el = f.elements[n]; return el ? String(el.value || '').trim() : ''; };
+    var sel = $('#svc'), svc = sel.options[sel.selectedIndex].text, p = meta.profile || {};
+    var first = g('first_name'), middle = g('middle_name'), last = g('last_name');
+    var name = [first, middle, last].filter(Boolean).join(' ') || g('full_name') || g('owner_name') || p.name || '';
+    var purpose = g('purpose'); if (/other/i.test(purpose) && g('purpose_other')) purpose = g('purpose_other');
+    var civilEl = f.querySelector('input[name="civil_status"]:checked');
+    var L = ['Document Type: ' + svc, 'Full Name: ' + name];
+    if (first || last) L.push('First Name: ' + first, 'Middle Name: ' + (middle || 'None'), 'Last Name: ' + last);
+    L.push('Complete Address: ' + (g('complete_address') || g('business_address')));
+    if (g('birth_date')) L.push('Date of Birth: ' + g('birth_date'));
+    if (civilEl) L.push('Civil Status: ' + civilEl.value);
+    if (g('residency_start')) L.push('Year or Date You Started Residing in the Barangay: ' + g('residency_start'));
+    if (g('business_name')) L.push("Owner's Name: " + g('owner_name'), 'Business Name: ' + g('business_name'), 'Business Type: ' + g('business_type'),
+      'Nature of Business: ' + g('nature_of_business'), 'Application Type: ' + g('application_type'));
+    if (purpose) L.push('Purpose of Request: ' + purpose);
+    L.push('Contact Number: ' + g('contact_number'));
+    return Object.assign({ first_name: p.first_name, middle_name: p.middle_name, last_name: p.last_name, address: p.address,
+      birthdate: p.birthdate, civil_status: p.civil_status, resident: p.name || '' }, { service: svc, details: L.join('\n'), tracking_no: '' });
+  }
+  // Rename the button for documents
+  (function () { var b = $('#newForm') && $('#newForm').querySelector('button[type="submit"]'); if (b && category === 'document') b.textContent = 'Submit & Review'; })();
+
   function shownStatus(r) { return r.status; }
 
   if ($('#newForm')) $('#newForm').addEventListener('submit', async function (e) {
     e.preventDefault();
+    var self = this;
+    // Documents: show the unsigned preview first; the real submit happens from its "Submit Request" button
+    if (category === 'document' && !self.dataset.confirmed) {
+      var t = previewRecord(self);
+      window.previewCertificate(t, {
+        submit: function () { self.dataset.confirmed = '1'; self.requestSubmit(); }
+      });
+      return;
+    }
+    delete self.dataset.confirmed;
+    closeModal();
     var form = new FormData(this);
     form.append('action', 'create');
     form.append('category', category);
