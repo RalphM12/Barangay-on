@@ -98,7 +98,8 @@
       var typed = q.value.trim();
       chosen = null;
       walkin = true;
-      known = { name: typed, address: '', contact: '', birth: '', civil: '' };
+      var cut = typed.lastIndexOf(' ');
+      known = { name: typed, first: cut < 0 ? typed : typed.slice(0, cut), middle: '', last: cut < 0 ? '' : typed.slice(cut + 1), address: '', contact: '', birth: '', civil: '' };
       body.querySelector('#afNo').value = 'Not registered';
       body.querySelector('#afStatus').value = 'Not registered';
       ['afNo', 'afStatus'].forEach(function (id) { body.querySelector('#' + id).classList.remove('autofilled'); });
@@ -113,7 +114,7 @@
       setField('afNo', r.resident_no);
       setField('afStatus', r.status === 'Pending' ? 'Waiting for Verification' : r.status);
       known = {
-        name: (r.first_name + ' ' + r.last_name).trim(), address: r.address || '', contact: r.contact_no || '',
+        name: fullName(r), first: r.first_name || '', middle: r.middle_name || '', last: r.last_name || '', address: r.address || '', contact: r.contact_no || '',
         birth: /^\d{4}-\d{2}-\d{2}$/.test(r.birthdate || '') ? r.birthdate : '', civil: r.civil_status || ''
       };
       applyKnown();
@@ -144,7 +145,7 @@
         ul.innerHTML = '<li class="none">' + esc(text) + '</li>' + walkLi;
       } else {
         ul.innerHTML = rows.map(function (r, i) {
-          return '<li role="option" data-i="' + i + '" aria-selected="false">' + esc(r.first_name + ' ' + r.last_name) +
+          return '<li role="option" data-i="' + i + '" aria-selected="false">' + esc(fullName(r)) +
             (r.status !== 'Registered' ? ' <small>(' + esc(r.status === 'Pending' ? 'Waiting for Verification' : r.status) + ')</small>' : '') +
             (r.same_name ? ' <small>(same name as another resident - check the address)</small>' : '') +
             '<small>' + esc(r.address || 'No address on record') + ' &middot; ' + esc(r.contact_no || 'No contact on record') + '</small></li>';
@@ -177,7 +178,7 @@
       try {
         var d = await getJson(lookupApi + '?id=' + Number(h.id));
         if (!d) return;
-        q.value = d.resident.first_name + ' ' + d.resident.last_name;
+        q.value = fullName(d.resident);
         fillResident(d.resident);
       } catch (err) {
         clearResident();
@@ -220,7 +221,7 @@
       if (!this.reportValidity()) return;                     // the browser points at the first field that is missing
 
       var data = new FormData(this);                          // only the application form fields carry a name
-      var name = String(data.get('full_name') || data.get('owner_name') || '').trim();
+      var name = String(data.get('full_name') || [data.get('first_name'), data.get('middle_name'), data.get('last_name')].filter(Boolean).join(' ') || data.get('owner_name') || '').trim();
       var addr = String(data.get('complete_address') || data.get('business_address') || '').trim();
       var purpose = String(data.get('purpose_other') || data.get('purpose') || '').trim();
       var svcName = svc.options[svc.selectedIndex].text;
@@ -230,7 +231,7 @@
       async function send(extra) {
         var form = new FormData(body.querySelector('#afForm'));
         form.append('action', 'create_document');
-        if (!form.get('full_name')) form.set('full_name', name);            // business permits have an owner, not a full name
+        if (!form.get('full_name') && !form.get('first_name')) form.set('full_name', name);            // business permits have an owner, not a full name
         if (walkin) {
           form.append('walkin', '1');
           form.append('address', addr);

@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
 from . import workflow
-from .core import (
+from .core import (display_name, 
     PERMISSIONS, SETTING_CHOICES, SETTING_DEFAULTS, SETTING_GROUPS, ROLE_LABELS, ApiError, add_notification,
     avatar_dir, avatar_url, captain_signature, csrf_check, full_name_expr, get_user_settings, has_permission,
     hash_password, password_problem, latest_notifications, log_activity, next_tracking_no, notify_role, notify_staff, page_args,
@@ -327,7 +327,7 @@ def transactions():
             "released_by": releaser.full_name if releaser else None,
             "approved_by_position": approver.position if approver else None,
             "captain_name": captain,
-            "resident": f"{res.first_name} {res.last_name}", "first_name": res.first_name, "last_name": res.last_name,
+            "resident": f"{res.first_name} {res.last_name}", "first_name": res.first_name, "middle_name": res.middle_name or "", "last_name": res.last_name,
             "address": res.address, "contact_no": res.contact_no,
             "birthdate": res.birthdate.strftime("%Y-%m-%d") if res.birthdate else None, "civil_status": res.civil_status, "sex": res.sex,
             "signature": signature,
@@ -383,10 +383,11 @@ def _create_document(user):
     svc = db.session.execute(select(Service).where(Service.id == service_id, Service.category == "document")).scalar()
     if not svc:
         raise ApiError("Please choose the certificate type.", 422)
-    details = build_document_details({"first_name": "", "last_name": ""}, svc.name)
+    details = build_document_details({"first_name": "", "middle_name": "", "last_name": ""}, svc.name)
 
     if walkin:
-        full = squash(f.get("full_name", ""))
+        w_first, w_middle, w_last = squash(f.get("first_name", "")), squash(f.get("middle_name", "")), squash(f.get("last_name", ""))
+        full = display_name(w_first, w_middle, w_last) if (w_first or w_last) else squash(f.get("full_name", ""))
         w_addr = (f.get("address") or "").strip()
         w_contact = (f.get("contact_no") or "").strip()
         if full == "" or len(full) > 100:
@@ -394,21 +395,24 @@ def _create_document(user):
         if len(w_addr) > 150:
             raise ApiError("The address is too long (150 characters max).", 422)
         w_contact = clean_contact(w_contact)
-        cut = full.rfind(" ")
-        first, last = (full, "") if cut < 0 else (full[:cut], full[cut + 1:])
-        if len(first) > 60 or len(last) > 60:
+        if w_first or w_last:
+            first, middle, last = w_first, w_middle, w_last
+        else:
+            cut = full.rfind(" ")
+            first, middle, last = (full, "", "") if cut < 0 else (full[:cut], "", full[cut + 1:])
+        if len(first) > 60 or len(middle) > 60 or len(last) > 60:
             raise ApiError("First or last name is too long.", 422)
         existing = db.session.execute(select(Resident).where(
             Resident.is_walkin.is_(True), Resident.deleted_at.is_(None), Resident.first_name == first,
-            Resident.last_name == last, Resident.address == w_addr).limit(1)).scalar()
+            Resident.middle_name == middle, Resident.last_name == last, Resident.address == w_addr).limit(1)).scalar()
         if not existing:
-            existing = Resident(first_name=first, last_name=last, address=w_addr, contact_no=w_contact, status="Inactive", is_walkin=True)
+            existing = Resident(first_name=first, middle_name=middle, last_name=last, address=w_addr, contact_no=w_contact, status="Inactive", is_walkin=True)
             db.session.add(existing)
             db.session.flush()
         elif w_contact:
             existing.contact_no = w_contact
         resident_id = existing.id
-        res = {"id": existing.id, "user_id": None, "first_name": first, "last_name": last, "address": w_addr}
+        res = {"id": existing.id, "user_id": None, "first_name": first, "middle_name": middle, "last_name": last, "address": w_addr}
     else:
         r = db.session.execute(select(Resident).where(Resident.id == resident_id, Resident.deleted_at.is_(None), Resident.is_walkin.is_(False))).scalar()
         if not r:
@@ -418,7 +422,7 @@ def _create_document(user):
             raise ApiError(f"This resident is {shown}, not Registered yet. Register the resident on the Residents page first.", 422)
         if (r.address or "").strip() == "":
             raise ApiError("This resident has no address on record. Add it on the Residents page first - it is not filled in for you.", 422)
-        res = {"id": r.id, "user_id": r.user_id, "first_name": r.first_name, "last_name": r.last_name, "address": r.address}
+        res = {"id": r.id, "user_id": r.user_id, "first_name": r.first_name, "middle_name": r.middle_name or "", "last_name": r.last_name, "address": r.address}
 
     dupe = db.session.scalar(select(Transaction.tracking_no).where(
         Transaction.resident_id == resident_id, Transaction.service_id == service_id, Transaction.status == "Pending").limit(1))
@@ -489,7 +493,7 @@ def my_transactions():
             service = db.session.execute(select(Service).where(Service.id == service_id, Service.category == "document")).scalar()
             if not service:
                 raise ApiError("Please choose a valid document type.", 422)
-            details = build_document_details({"first_name": resident.first_name, "last_name": resident.last_name}, service.name)
+            details = build_document_details({"first_name": resident.first_name, "middle_name": resident.middle_name or "", "last_name": resident.last_name}, service.name)
         else:
             details = (f.get("details") or "").strip()
         if details == "":
@@ -531,7 +535,8 @@ def my_transactions():
         select(Service.id, Service.name).where(Service.category == category, Service.name != OTHER_SERVICE).order_by(Service.name)))
     return jsonify({
         "rows": data, "services": services,
-        "profile": {"resident_no": reg_no(resident.id), "name": f"{resident.first_name} {resident.last_name}",
+        "profile": {"resident_no": reg_no(resident.id), "name": display_name(resident.first_name, resident.middle_name, resident.last_name),
+                    "first_name": resident.first_name, "middle_name": resident.middle_name or "", "last_name": resident.last_name,
                     "address": resident.address, "contact_no": resident.contact_no, "status": resident.status,
                     "birthdate": resident.birthdate.strftime("%Y-%m-%d") if resident.birthdate else "", "civil_status": resident.civil_status or ""},
         "purposes": DOC_PURPOSES, "civil_statuses": CIVIL_STATUSES, "today": date.today().strftime("%Y-%m-%d"),
@@ -779,7 +784,7 @@ def account():
         sig_info = {"image": captain_signature(uid), "custom": own != ""}
     res_data = None
     if resident:
-        res_data = {"id": resident.id, "first_name": resident.first_name, "last_name": resident.last_name, "address": resident.address,
+        res_data = {"id": resident.id, "first_name": resident.first_name, "middle_name": resident.middle_name or "", "last_name": resident.last_name, "address": resident.address,
                     "birthdate": resident.birthdate.strftime("%Y-%m-%d") if resident.birthdate else None,
                     "sex": resident.sex, "civil_status": resident.civil_status, "contact_no": resident.contact_no}
     return jsonify({
@@ -852,10 +857,11 @@ def residents():
         if rid == 0 and user["role"] != "admin":
             raise ApiError("Only the administrator can add residents.", 403)
         first, last = (f.get("first_name") or "").strip(), (f.get("last_name") or "").strip()
+        middle = (f.get("middle_name") or "").strip()
         address, status = (f.get("address") or "").strip(), (f.get("status") or "").strip()
         if first == "" or last == "":
             raise ApiError("First name and last name are required.", 422)
-        if len(first) > 60 or len(last) > 60 or len(address) > 150:
+        if len(first) > 60 or len(middle) > 60 or len(last) > 60 or len(address) > 150:
             raise ApiError("One of the fields is too long.", 422)
         contact = clean_contact(f.get("contact_no", ""))
         if status != "" and status not in RES_STATUSES:
@@ -872,7 +878,7 @@ def residents():
             row = db.session.get(R, rid)
             if not row:
                 raise ApiError("Resident not found.", 404)
-            row.first_name, row.last_name, row.address, row.contact_no = first, last, address, contact
+            row.first_name, row.middle_name, row.last_name, row.address, row.contact_no = first, middle, last, address, contact
             row.birthdate, row.civil_status = birth, civil or None
             if status:
                 row.status = status        # the form no longer sends it: an existing status is kept as it is
@@ -928,7 +934,7 @@ def residents():
         else:
             login_name, login_pass = (f.get("username") or "").strip(), f.get("new_password", "")
             login = _new_resident_login(user, first, last, login_name, login_pass) if (login_name or login_pass) else None
-            db.session.add(R(user_id=login.id if login else None, first_name=first, last_name=last, address=address,
+            db.session.add(R(user_id=login.id if login else None, first_name=first, middle_name=middle, last_name=last, address=address,
                              contact_no=contact, status=status or "Registered", birthdate=birth, civil_status=civil or None, sex=sex or None))
             db.session.commit()
         return ok()
@@ -949,7 +955,7 @@ def residents():
                 .where(Transaction.resident_id == R.id, Service.category == cat).correlate(R).scalar_subquery())
 
     data = rows(db.session.execute(paged(
-        select(R.id, R.user_id, R.first_name, R.last_name, R.address, R.contact_no, R.status, R.created_at, R.birthdate, R.civil_status, R.sex,
+        select(R.id, R.user_id, R.first_name, R.middle_name, R.last_name, R.address, R.contact_no, R.status, R.created_at, R.birthdate, R.civil_status, R.sex,
                case((R.user_id.is_not(None), 1), else_=0).label("has_account"),
                select(User.created_at).where(User.id == R.user_id).correlate(R).scalar_subquery().label("account_created"),
                cnt("document").label("doc_count"), cnt("complaint").label("complaint_count"), cnt("report").label("report_count"),
@@ -980,14 +986,14 @@ def resident_lookup():
         if not r:
             raise ApiError("That resident record no longer exists.", 404)
         return jsonify({"resident": {
-            "id": r.id, "first_name": r.first_name, "last_name": r.last_name, "address": r.address, "contact_no": r.contact_no,
+            "id": r.id, "first_name": r.first_name, "middle_name": r.middle_name or "", "last_name": r.last_name, "address": r.address, "contact_no": r.contact_no,
             "birthdate": r.birthdate.strftime("%Y-%m-%d") if r.birthdate else None, "civil_status": r.civil_status, "sex": r.sex,
             "status": r.status, "has_account": 1 if r.user_id else 0, "resident_no": reg_no(r.id)}})
     q = (request.args.get("q") or "").strip()
     if len(q) < 2:
         return jsonify({"rows": [], "q": q})
     data = rows(db.session.execute(
-        select(R.id, R.first_name, R.last_name, R.address, R.contact_no, R.status)
+        select(R.id, R.first_name, R.middle_name, R.last_name, R.address, R.contact_no, R.status)
         .where(*base, or_(full_name_expr().contains(q, autoescape=True), (R.last_name + " " + R.first_name).contains(q, autoescape=True),
                           R.contact_no.contains(q, autoescape=True)))
         .order_by(case((R.status == "Registered", 0), else_=1), R.last_name, R.first_name).limit(8)))

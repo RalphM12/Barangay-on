@@ -2,6 +2,9 @@
 
 function $(selector, root) { return (root || document).querySelector(selector); }
 
+// "First Middle Last" of a resident record (the middle name is optional)
+function fullName(r) { return [r.first_name, r.middle_name, r.last_name].filter(Boolean).join(' '); }
+
 // Escape text before putting it into innerHTML
 function esc(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {

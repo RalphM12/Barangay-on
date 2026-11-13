@@ -52,7 +52,15 @@ def build_document_details(resident: dict, service_name: str) -> str:
     def clean(k):
         return squash(request.form.get(k, ""))
 
-    name = clean("full_name") or f"{resident.get('first_name', '')} {resident.get('last_name', '')}".strip()
+    first, middle, last = clean("first_name"), clean("middle_name"), clean("last_name")
+    if first or last:                                   # the form asks for the three parts
+        if first == "" or last == "":
+            raise ApiError("Please enter your first name and last name.", 422)
+        if max(len(first), len(middle), len(last)) > 60:
+            raise ApiError("A name is too long (60 characters max).", 422)
+        name = " ".join(p for p in (first, middle, last) if p)
+    else:
+        name = clean("full_name") or " ".join(p for p in (resident.get("first_name", ""), resident.get("middle_name", ""), resident.get("last_name", "")) if p)
     contact = clean("contact_number")
     if name == "" or len(name) > 150:
         raise ApiError("Please enter your full name.", 422)
@@ -61,6 +69,8 @@ def build_document_details(resident: dict, service_name: str) -> str:
         raise ApiError("Please enter a valid contact number (11 digits maximum).", 422)
 
     lines = [f"Document Type: {service_name}", f"Full Name: {name}"]
+    if first or last:
+        lines += [f"First Name: {first}", f"Middle Name: {middle}" if middle else "Middle Name: None", f"Last Name: {last}"]
     if service_name in ("Business Permit Request", "Business Permit"):
         owner, business, address = clean("owner_name"), clean("business_name"), clean("business_address")
         btype, nature, app_type = clean("business_type"), clean("nature_of_business"), clean("application_type")

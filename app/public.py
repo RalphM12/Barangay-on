@@ -189,7 +189,7 @@ def register():
     if existing:
         return redirect(home_for(existing["role"]))
     errors = {}
-    old = {k: "" for k in ("first_name", "last_name", "address", "birthdate", "sex", "civil_status", "contact_no", "username")}
+    old = {k: "" for k in ("first_name", "middle_name", "last_name", "address", "birthdate", "sex", "civil_status", "contact_no", "username")}
 
     if request.method == "POST":
         for k in old:
@@ -199,6 +199,8 @@ def register():
             errors["form"] = "Your session expired. Please try again."
         if old["first_name"] == "" or len(old["first_name"]) > 60:
             errors["first_name"] = "Enter your first name (up to 60 characters)."
+        if len(old["middle_name"]) > 60:
+            errors["middle_name"] = "Middle name is too long (up to 60 characters)."
         if old["last_name"] == "" or len(old["last_name"]) > 60:
             errors["last_name"] = "Enter your last name (up to 60 characters)."
         if old["address"] == "" or len(old["address"]) > 150:
@@ -237,7 +239,7 @@ def register():
                          position="Resident", role="resident")
                 db.session.add(u)
                 db.session.flush()
-                db.session.add(Resident(user_id=u.id, first_name=old["first_name"], last_name=old["last_name"], address=old["address"],
+                db.session.add(Resident(user_id=u.id, first_name=old["first_name"], middle_name=old["middle_name"], last_name=old["last_name"], address=old["address"],
                                         birthdate=bd, sex=old["sex"], civil_status=old["civil_status"], contact_no=old["contact_no"], status="Pending"))
                 db.session.commit()
                 notify_staff("New resident registration", f"{full_name} registered online and is Waiting for Verification. Open Residents and click Verify This Resident to approve.", "info")

@@ -43,6 +43,13 @@
               {{ field_error('first_name') }}
             </div>
             <div>
+              <label for="middle_name">Middle name <small>(optional)</small></label>
+              <input type="text" id="middle_name" name="middle_name" maxlength="60" value="{{ old.middle_name }}"{{ bad('middle_name') }}>
+              {{ field_error('middle_name') }}
+            </div>
+          </div>
+          <div class="row-2">
+            <div>
               <label for="last_name">Last name</label>
               <input type="text" id="last_name" name="last_name" maxlength="60" value="{{ old.last_name }}" required{{ bad('last_name') }}>
               {{ field_error('last_name') }}
