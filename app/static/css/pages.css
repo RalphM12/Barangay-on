@@ -962,3 +962,32 @@ html body .modal-back .modal:has(.view-split) { max-width: min(1400px, 97vw); }
 .cert-preview-wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
   font: 800 clamp(20px, 6vw, 56px)/1.2 Arial, sans-serif; color: rgba(180, 30, 30, .18); transform: rotate(-30deg); pointer-events: none; letter-spacing: .05em; }
 @media print { .no-print-modal, .no-print-modal * { display: none !important; } }
+
+/* Barangay Business Clearance (Word template) */
+.cert2 .bch { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--u) * 2.5) calc(var(--u) * 5) 0; }
+.cert2 .bch img { width: calc(var(--u) * 11.5); height: calc(var(--u) * 11.5); object-fit: contain; }
+.cert2 .bch-t { display: flex; flex-direction: column; text-align: center; font-size: calc(var(--u) * 1.6); line-height: 1.35; }
+.cert2 .bch-t b { font-size: calc(var(--u) * 1.9); }
+.cert2 .bcoffice { text-align: center; font-weight: 800; font-size: calc(var(--u) * 2.4); border-bottom: calc(var(--u) * .25) solid #888; margin: calc(var(--u) * .5) calc(var(--u) * 3) 0; padding-bottom: calc(var(--u) * .3); }
+.cert2 .bctitle { text-align: center; font-size: calc(var(--u) * 4.5); font-weight: 900; margin: calc(var(--u) * .6) 0 calc(var(--u) * 1.4); letter-spacing: .01em; background: linear-gradient(90deg, #1b9e5a, #1c8fc4); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: calc(var(--u) * .12) #14355c; }
+.cert2 .bcbody { padding: 0 6%; }
+.cert2 .bcbody p { margin: 0 0 calc(var(--u) * .8); text-align: center; font-size: calc(var(--u) * 1.75); }
+.cert2 .bcbody p.bcmid { margin-top: calc(var(--u) * .4); }
+.cert2 .bcbox.f2v { display: block; width: 100%; min-height: calc(var(--u) * 5.6); border: calc(var(--u) * .13) solid #8fa4c8; border-radius: calc(var(--u) * 1.4); text-align: center; font-weight: 700; font-size: calc(var(--u) * 2.6); line-height: calc(var(--u) * 5.2); box-sizing: border-box; padding: 0 calc(var(--u) * 1.5); margin-bottom: calc(var(--u) * .3); }
+.cert2 .bccap { text-align: center; font-weight: 700; font-style: italic; font-size: calc(var(--u) * 1.6); margin-bottom: calc(var(--u) * 1.2); }
+.cert2 .bcmid2 { display: grid; grid-template-columns: 36% 28% 1fr; gap: calc(var(--u) * 2); padding: calc(var(--u) * 1) 5% 0; margin-top: auto; align-items: start; }
+.cert2 .bcleft .f2row { font-size: calc(var(--u) * 1.5); line-height: 1.55; }
+.cert2 .bcleft .f2v { min-width: calc(var(--u) * 12); }
+.cert2 .bcfp { font-size: calc(var(--u) * 1.5); margin-top: calc(var(--u) * .4); }
+.cert2 .bcfee { display: flex; justify-content: space-between; gap: calc(var(--u) * 1); font-size: calc(var(--u) * 1.5); line-height: 1.5; padding-left: calc(var(--u) * 1); }
+.cert2 .bcfee .f2v { min-width: calc(var(--u) * 9); }
+.cert2 .bcthumb { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: calc(var(--u) * 1.4); }
+.cert2 .bcthumbbox { width: calc(var(--u) * 14); height: calc(var(--u) * 14); border: calc(var(--u) * .18) solid #111; margin-top: calc(var(--u) * 1); }
+.cert2 .bcapl { width: 80%; margin-top: calc(var(--u) * 5); }
+.cert2 .bcsignbox { border: calc(var(--u) * .13) solid #555; padding: calc(var(--u) * 1.2); font-size: calc(var(--u) * 1.5); display: flex; flex-direction: column; gap: calc(var(--u) * .3); }
+.cert2 .bcpn { display: flex; flex-direction: column; text-align: center; }
+.cert2 .bcpn b { text-decoration: underline; font-size: calc(var(--u) * 1.6); }
+.cert2 .bcsb { height: calc(var(--u) * 8); justify-content: center; margin: 0; }
+.cert2 .bcbottom { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.6) 5% calc(var(--u) * 3); }
+.cert2 .bcround { border: calc(var(--u) * .3) solid #111; border-radius: calc(var(--u) * 1.8); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6); font-size: calc(var(--u) * 1.4); line-height: 1.6; }
+.cert2 .bcround .f2v { min-width: 0; }

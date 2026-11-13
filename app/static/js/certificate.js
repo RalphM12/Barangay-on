@@ -16,6 +16,7 @@
     assets: '/static/img/cert/',         // header banner, QR codes, icons taken from the barangay's Word templates
     email: 'stoninobaliwagcity@gmail.com',
     facebook: 'Barangay Sto.Niño',
+    treasurer: 'Susan E. Vicente',       // printed under "Prepared by" on the Business Clearance
     clearanceMonths: 6,                  // Barangay Clearance validity
     indigencyMonths: 3,                  // Certificate of Indigency validity
     residencyMonths: 6,                  // Certificate of Residency validity
@@ -324,6 +325,36 @@
       '</div>' + footer('(Not valid without official barangay dry seal and official receipt)');
   }
 
+  /* ---------- Barangay Business Clearance (the barangay's own Word template) ---------- */
+  function businessClearance(c) {
+    var year = (c.signedOn || c.now).getFullYear();
+    var fee = function (l) { return '<div class="bcfee"><span>' + l + '</span><span class="f2v">&nbsp;</span></div>'; };
+    var d = c.signedOn || c.now;
+    var sig = c.signed ? '<img class="f2sig" src="' + (c.signature || CONFIG.signature) + '" alt="Signature of the Punong Barangay">' : '';
+    return '<div class="bch"><img src="' + asset('seal-left.jpg') + '" alt=""><div class="bch-t"><span>Republic of the Philippines</span><span>Province of ' + esc(CONFIG.province) +
+        '</span><span>City of Baliwag</span><b>BARANGAY STO. NIÑO</b></div><img src="' + asset('seal-right.jpg') + '" alt=""></div>' +
+      '<div class="bcoffice">OFFICE OF THE SANGGUNIANG BARANGAY</div>' +
+      '<h2 class="bctitle">BARANGAY BUSINESS CLEARANCE</h2>' +
+      '<div class="bcbody"><p>This is to certify that the application for Barangay Business Clearance of</p>' +
+      '<div class="bcbox f2v">' + (c.name ? esc(toTitle(c.name)) : '&nbsp;') + '</div><div class="bccap">Name</div>' +
+      '<p>Covering his / her business establishment located at</p>' +
+      '<div class="bcbox f2v">' + (c.address ? esc(c.address) : '&nbsp;') + '</div><div class="bccap">Location of Business</div>' +
+      '<p>is within the territorial jurisdiction of this Barangay pursuant to the provision Sec. 152 (c) Republic Act No. 7160, otherwise known as the Local Government Code of 1991. The kind of business for is</p>' +
+      '<div class="bcbox f2v">' + (c.nature ? esc(c.nature) : '&nbsp;') + '</div><div class="bccap">Nature of Business</div>' +
+      '<p class="bcmid">under the trade name</p>' +
+      '<div class="bcbox f2v">' + (c.businessName ? esc(c.businessName) : '&nbsp;') + '</div><div class="bccap">Business Name</div></div>' +
+      '<div class="bcmid2"><div class="bcleft">' +
+        '<div class="f2row"><b>Com. Tax Cert. No.</b> <span class="f2v">&nbsp;</span></div><div class="f2row"><b>Issued at :</b> <span class="f2v">&nbsp;</span></div>' +
+        '<div class="f2row"><b>Issued on :</b> <span class="f2v">&nbsp;</span></div><div class="bcfp"><b>FEES PAID:</b></div>' +
+        fee('Barangay Clearance') + fee('Sanitary Permit') + fee('Surcharge') + fee('Interest') + fee('Miscellaneous') + fee('<b>TOTAL</b>') +
+        '<div class="f2row"><b>Paid Under O.R. No.</b> <span class="f2v">&nbsp;</span></div></div>' +
+        '<div class="bcthumb"><div class="bcthumbbox"></div><span>RIGHT THUMB MARK</span><div class="f2line bcapl"></div><span>Applicant Signature</span></div>' +
+        '<div class="bcsignbox"><div>Prepared by:</div><div class="bcpn"><b>' + esc(CONFIG.treasurer) + '</b><span>Treasurer</span></div>' +
+          '<div>APPROVED BY:</div><div class="f2sigbox bcsb">' + sig + '</div><div class="bcpn"><b>' + (c.captainName ? esc(c.captainName.toUpperCase()) : '&nbsp;') + '</b><span>Barangay Captain</span></div></div></div>' +
+      '<div class="bcbottom"><div class="bcround">This Business Clearance is valid from date of issue until <b>DECEMBER 31, ' + year + '</b>.<br>Issued this <span class="f2v f2s">' + ordinal(d.getDate()) + '</span> day of <span class="f2v f2m">' + MONTHS[d.getMonth()] + '</span>, ' + d.getFullYear() + ' at Barangay Sto. Niño, Baliwag, Bulacan.</div>' +
+        '<div class="bcround bcnote"><b>NOTE:</b> This Clearance may not be renewed and can be revoked if the grantee violates any existing rules, regulations, ordinance of this Barangay.</div></div>';
+  }
+
   function toTitle(s) {
     return String(s || '').toLowerCase().replace(/(^|[\s.\-'])([a-zñ])/g, function (m, a, b) { return a + b.toUpperCase(); });
   }
@@ -333,7 +364,7 @@
     switch (t.service) {
       case 'Certificate of Residency': body = residency(c); break;
       case 'Certificate of Indigency': body = indigency(c); break;
-      case 'Business Permit': case 'Business Permit Request': body = businessPermit(c); own = false; break;
+      case 'Business Permit': case 'Business Permit Request': body = businessClearance(c); break;
       default: body = clearance(c);       // Barangay Clearance and any other document
     }
     if (own) {
