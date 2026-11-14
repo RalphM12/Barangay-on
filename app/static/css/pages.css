@@ -991,3 +991,22 @@ html body .modal-back .modal:has(.view-split) { max-width: min(1400px, 97vw); }
 .cert2 .bcbottom { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.6) 5% calc(var(--u) * 3); }
 .cert2 .bcround { border: calc(var(--u) * .3) solid #111; border-radius: calc(var(--u) * 1.8); padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6); font-size: calc(var(--u) * 1.4); line-height: 1.6; }
 .cert2 .bcround .f2v { min-width: 0; }
+
+/* Resident Documents page: dark mode */
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .page-head {
+  border-color: rgba(255,255,255,.10);
+  background: radial-gradient(circle at 92% 8%, rgba(66,133,244,.20), transparent 30%), linear-gradient(135deg, #182440 0%, #121c33 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .page-head h1 { color: #f1f5fb; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .page-head p { color: #a9b6cc; }
+html[data-scheme="dark"] body #myApp.document-request .document-heading h2 { color: #f1f5fb; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card {
+  background: #151f35; border-color: rgba(255,255,255,.10); box-shadow: 0 10px 28px rgba(0,0,0,.35);
+}
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card h3 { color: #f1f5fb; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card .table-wrap { border-color: rgba(255,255,255,.10); background: transparent; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card th { background: #1b2842; color: #a9b6cc; border-bottom-color: rgba(255,255,255,.10); }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card td { color: #d5deec; border-bottom-color: rgba(255,255,255,.08); background: transparent; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card tbody tr:hover td { background: #1b2842; }
+html[data-scheme="dark"] .page:has(#myApp[data-category="document"]) > .card td:first-child { color: #8db4ff; }
